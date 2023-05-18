@@ -28,6 +28,8 @@ let enemiesDS;
 let enemiesE;        
 let enemyDS;           		//enemies sub group
 let enemyE              	//enemies sub group
+let buttons;
+let Bttn_reset;
 let playerHealth = 100; 	// player health not currently in use
 let gameOver = false;   	// boolean to check if game over
 let trip = false;       
@@ -76,6 +78,7 @@ function setup() {
 	Pointer();
 	explnsSpriteSetup();
 	TractorBeamSetup();
+	createButtons();
 	//miniMap = createImage(100, 50);
 	//nextStageSetup();
 	//Tbeam.debug = true;
@@ -115,6 +118,7 @@ function draw() {
 	rapidFirePickup();
 	rapidFire();
 	enemyRest();
+	buttons.draw();
 	//MiniMap();
 }
 
@@ -715,6 +719,21 @@ function createHUD()
 	//HUD.layer = 5;
 	HUD.collider = 'none';
 }
+
+function createButtons()
+{
+	buttons = new Group();
+	Bttn_reset = new buttons.Sprite(1308,235,40,20)
+	Bttn_reset.color = color(5,25,5);
+	Bttn_reset.text = "Reset";
+	Bttn_reset.textColor = color('darkgreen');
+}
+
+function resetButton()
+{
+	
+}
+
 //create pointer sprite
 function Pointer()
 {

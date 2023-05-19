@@ -56,29 +56,19 @@ let Tbeam
 let nextStageimg;       //img for next stage
 let plyrShotTmr = 0
 let plyrShotTmrstrt = -30;
-let GameState = "start";
+let gameState = "title"; // title, start, run, next stage, game over.
 
 function setup() {
 	createCanvas(1500, 750);
 	allSprites.pixelPerfect = true;
-	Animation();
-	wrldCenter = createVector(width/2,height/2)
+	wrldCenter = createVector(width/2,height/2);
 	camera.x = wrldCenter.x;
 	camera.y = wrldCenter.y;
 	camera.zoom = 0.5;  //default 0.75
-	player();
-	Lazer();
-	PwrUpsGroup();
-	PUgroups();
-	Enemies();
-	drawEnemies();
-	enemyLazer();
-	Lives();
-	createHUD();
-	Pointer();
-	explnsSpriteSetup();
-	TractorBeamSetup();
-	createButtons();
+	background(32,34,50);
+	Dashboard();
+	createButtons()
+
 	//miniMap = createImage(100, 50);
 	//nextStageSetup();
 	//Tbeam.debug = true;
@@ -89,36 +79,63 @@ function setup() {
 
 function draw() {
 	//clear();
-	background(32,34,50);
-	setPointer();
+	startButton()
+	if (gameState == "start")
+	{
+		player();
+		setupEnemies();
+		createHUD();
+		Lazer();
+		PwrUpsGroup();
+		PwrUpsSubGroup();
+		enemyLazer();
+		explnsSpriteSetup();
+		TractorBeamSetup();
+		createEnemies();
+		Pointer();
+		Lives();
+		resetButton();
+
+		gameState = 'run'
+	}
+	if (gameState == "run")
+	{
+		background(32,34,50);
+		camera.on();
+		push();
+		scale(2.5);
+		animation(BckgrndAni,width/2,height/2)
+		pop();
+		DrawThingsOnCam();
+		Camera1();
+		camera.off();
+		//console.log(player1.x,player1.y);
+		setGameOver();
+		nextStageStart();
+		lives.draw();
+		FlyingLimit();
+		TractorBeam();
+		LifePickup();
+		rapidFirePickup();
+		rapidFire();
+		enemyRest();
+		buttons.draw();
+		setPointer();
+		Dashboard();
+		HUD.draw();
+		pointer.draw();
+		scoreBoard();
+		PwrUpsRest();
+	}
+	if(gameState == 'gameOver')
+	{
+		GameOver();
+		gameOverScreen();
+	}
 	if (gameOver === false)
 	{
-	camera.on();
-	push()
-	scale(2.5);
-	animation(BckgrndAni,width/2,height/2)
-	pop()
-	DrawThingsOnCam()
-	Tbeam.draw();
-	Camera1();
-	camera.off();
+
 	}
-	GameOver();
-	//console.log(player1.x,player1.y);
-	gameOverScreen();
-	nextStageStart();
-	Dashboard();
-	HUD.draw();
-	scoreBoard();
-	lives.draw();
-	pointer.draw();
-	FlyingLimit();
-	TractorBeam();
-	LifePickup();
-	rapidFirePickup();
-	rapidFire();
-	enemyRest();
-	buttons.draw();
 	//MiniMap();
 }
 
@@ -144,6 +161,10 @@ function preload()
 								 up: { width : 100, height: 100, row: 1, frames: 6 , frameDelay: 10 },
 								 idleup: {width : 100, height: 100, row: 0, frames: 1 },
 								 idledown: {width : 100, height: 100, row: 1, frames: 1 }});
+	Tbeam.ani = 'idleup'
+
+	pUFOanim = loadAnimation("UFO V2.png","UFO V2 STEALTH.png");
+	pUFOanim.frameDelay = 10
 }
 
 // set up player sprite
@@ -197,7 +218,7 @@ function pMove()
 	//player1.draw();
 }
 
-function Enemies()
+function setupEnemies()
 {
 	enemies = new Group();
 	enemiesDS = new enemies.Group();
@@ -210,7 +231,7 @@ function Enemies()
 	enemies.layer = 3;
 }
 
-function drawEnemies()
+function createEnemies()
 {
 	var arr = [-1000,1000]
 	if (enemies.length === 0)
@@ -416,8 +437,7 @@ function Camera1()
 
 function Animation()
 {
-	pUFOanim = loadAnimation("UFO V2.png","UFO V2 STEALTH.png");
-	pUFOanim.frameDelay = 10;
+
 }
 //not used. testing
 function nextStageSetup()
@@ -495,8 +515,7 @@ function shootEnemyLazer()
 //sets up game over img and shows total enemies killed before game over.
 function gameOverScreen()
 {	
-	if (lives.length === 0)
-	{
+
 		push();
 		if (alpha1 < 200)
 		{
@@ -513,7 +532,15 @@ function gameOverScreen()
 		text(score,930,415);
 		alpha1 += 1.5
 		pop();
-		gameOver = true;
+
+}
+
+
+function setGameOver()
+{
+	if (lives.length == 0)
+	{
+		gameState = 'gameOver'
 	}
 }
 
@@ -534,7 +561,7 @@ function Lives()
 //removes left over sprites when game over
 function GameOver()
 {
-		if (gameOver === true && trip === false)
+		if (trip === false)
 	{
 		enemies.remove();
 		player1.remove();
@@ -545,8 +572,7 @@ function GameOver()
 // shows how many enemies left on HUD
 function scoreBoard()
 {
-	if (gameOver === false)
-	{
+
 	push();
 		
 	pop();
@@ -564,8 +590,8 @@ function scoreBoard()
 	textSize(20);
 	text(enemies.length,1250,91);
 	pop();
-	}
 }
+
 function PwrUpsGroup()
 {
 	PwrUps = new Group()
@@ -573,7 +599,15 @@ function PwrUpsGroup()
 	//PwrUps.collider = 'k';
 }
 
-function PUgroups()
+function PwrUpsRest()
+{
+	if (PwrUps.speed > 0)
+	{
+		PwrUps.velocity *= 0.98;
+	}
+}
+
+function PwrUpsSubGroup()
 {
 	lifePUs = new PwrUps.Group();
 	rapidfirePUs = new PwrUps.Group();
@@ -680,7 +714,7 @@ function nextStage()
 	{
 		enDSStartamt += 10;
 		enEStartamt += 5;
-		drawEnemies();
+		createEnemies();
 		alpha1 = 0;
 	}
 	nextstage = false;
@@ -701,6 +735,7 @@ function DrawThingsOnCam()
 	DSexplns.draw();
 	Eexplns.draw();
 	PwrUps.draw();
+	Tbeam.draw();
 	//player1.draw();
 }
 //creates camera boarder/dashboard
@@ -723,22 +758,37 @@ function createHUD()
 function createButtons()
 {
 	buttons = new Group();
-	Bttn_reset = new buttons.Sprite(1308,235,40,20)
-	Bttn_reset.color = color(5,25,5);
-	Bttn_reset.text = "Reset";
-	Bttn_reset.textColor = color('darkgreen');
+	Bttn_start = new buttons.Sprite(width/2,height/2,200,100);
+	Bttn_start.color = color('blue')
+	Bttn_start.text = 'START';
+	Bttn_start.textColor = color('lightblue')
+	Bttn_start.textSize = 30;
+	Bttn_start.collider = 'k';
+}
+
+function startButton()
+{
+	if (Bttn_start.mouse.presses())
+	{
+		Bttn_start.remove();
+		gameState = 'start';
+	}
 }
 
 function resetButton()
 {
-	
+	Bttn_reset = new buttons.Sprite(1308,235,40,20);
+	Bttn_reset.color = color(5,25,5);
+	Bttn_reset.text = "Reset";
+	Bttn_reset.textColor = color('darkgreen');
+	Bttn_reset.collider = 'k';
 }
 
 //create pointer sprite
 function Pointer()
 {
 	pointer = new Sprite(1308,135,20,20);
-	pointer.collider = 'k'
+	pointer.collider = 'k';
 	pointer.img = pointerImg;
 }
 
@@ -752,8 +802,8 @@ function setPointer()
 		let x = abs(PtoEdist);
 		enemyToplayerDist[i] = x;
 	}
-	minNum = enemyToplayerDist[0]
-	minIdx = 0
+	minNum = enemyToplayerDist[0];
+	minIdx = 0;
 
 	for (let i = 0; i < enemyToplayerDist.length; i++) 
 	{
@@ -772,8 +822,8 @@ function setPointer()
 
 function TractorBeamSetup()
 {
-	Tbeam.h = 50
-	Tbeam.w = 40
+	Tbeam.h = 50;
+	Tbeam.w = 40;
 	Tbeam.scale = 2.5;
 	Tbeam.anis.offset.x = -2;
 	Tbeam.anis.offset.y = -27;
@@ -846,6 +896,8 @@ function MiniMap()
 
 
 /*  ISSUES
+*** need to add start button working on setting up game loop. title => start => run => game over => restart
+                                                                                	||=>reset
 fixed 1. pointer does not always point to next enemy after first enemy is killd. starts working again once 
 new enemy is close "enough".
 2. i believe enemy explosions animation doesnt finish if killing enemies in quick succesion

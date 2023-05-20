@@ -34,8 +34,8 @@ let playerHealth = 100; 	// player health not currently in use
 let gameOver = false;   	// boolean to check if game over
 let trip = false;       
 let score = 0;          	//total amount of enemies killed
-let enDSStartamt = 5;    	//enemy start amount
-let enEStartamt = 5;    	//enemy eye start amount
+let enDSStartamt = 1;    	//enemy start amount
+let enEStartamt = 0;    	//enemy eye start amount
 let nextstage = false;  	//turns true when next stage starts false again when next stage is doen setting up.
 let paused = false;     	//not used
 let HUD;                	//hud sprite
@@ -57,6 +57,7 @@ let nextStageimg;       //img for next stage
 let plyrShotTmr = 0
 let plyrShotTmrstrt = -30;
 let gameState = "title"; // title, start, run, next stage, game over.
+let tripNextStage = false;
 
 function setup() {
 	createCanvas(1500, 750);
@@ -111,7 +112,7 @@ function draw() {
 		camera.off();
 		//console.log(player1.x,player1.y);
 		setGameOver();
-		nextStageStart();
+		//nextStageStart();
 		lives.draw();
 		FlyingLimit();
 		TractorBeam();
@@ -126,11 +127,24 @@ function draw() {
 		pointer.draw();
 		scoreBoard();
 		PwrUpsRest();
+		nextStageSwitch();
+		resetAction();
+	}
+	if(gameState == 'nextStage')
+	{
+		background(32,34,50);
+		animation(BckgrndAni,width/2,height/2);
+		Dashboard();
+		player1.speed = 0;
+		nextStageButton();
+		Bttn_nextStage.draw();
+
 	}
 	if(gameState == 'gameOver')
 	{
 		GameOver();
 		gameOverScreen();
+		Dashboard();
 	}
 	if (gameOver === false)
 	{
@@ -154,6 +168,16 @@ function preload()
 	Eexplns.spriteSheet = 'eye splode v2.png';// needs fixed
 	Eexplns.addAnis({explode: { width:600, height: 400, row: 0, frames: 8, frameDelay: 5},
 									hit: { width:600, height: 400, row: 1, frames: 3, frameDelay: 15}});
+
+	enlazers = new Group();
+	enlazers.spriteSheet = 'blaster.png';
+	enlazers.addAnis({shoot: { width : 50, height: 25, row: 0, frames: 11, frameDelay: 4 },
+						fly: { width : 50, height: 25, row: 1, frames: 3 , frameDelay: 4 }});
+
+	lazers = new Group();
+	lazers.spriteSheet = 'ufo zaps.png';
+	lazers.addAnis({shoot: { width : 100, height: 50, row: 0, frames: 16, frameDelay: 4 },
+					fly: { width : 100, height: 50, row: 1, frames: 3 , frameDelay: 4 }});
 	
 	Tbeam = new Sprite();
 	Tbeam.spriteSheet = 'Beam Sheetnew.png'
@@ -352,6 +376,11 @@ function playerHit()
 			i--;
 			}
 }
+
+function playerShake()
+{
+
+}
 //removes shot lazers when collided with enemy
 function laserDestr()
 {
@@ -379,17 +408,15 @@ function laserDestr()
 // Setting up group of lazer sprites
 function Lazer()
 {
-	lazers = new Group();
+
 	lazers.width = 10;
 	lazers.speed = 1;
 	lazers.height = 15;
 	lazers.life = 300;
-	lazers.spriteSheet = 'ufo zaps.png';
-	lazers.addAnis({shoot: { width : 100, height: 50, row: 0, frames: 16, frameDelay: 4 },
-	fly: { width : 100, height: 50, row: 1, frames: 3 , frameDelay: 4 }
-	});
+
 
 }
+
 // makes new lazer on mouse and sets properties.
 // starts lazer at player center and shoots towards mouse.
 function shootLazer()
@@ -397,7 +424,7 @@ function shootLazer()
 	if (rapidfiring == false)
 	{
 		plyrShotTmr = frameCount - plyrShotTmrstrt;
-		if (mouse.pressed())
+		if (mouse.presses())
 		{
 			if (plyrShotTmr >= 20)
 			{
@@ -470,16 +497,11 @@ function FlyingLimit()
 //sets up enemy lazer sprite.
 function enemyLazer()
 {
-	enlazers = new Group();
 	enlazers.width = 12;
 	enlazers.height = 5;
 	enlazers.speed = 4;
 	enlazers.life = 300;
 	enlazers.layer = 1;
-	enlazers.spriteSheet = 'blaster.png';
-	enlazers.addAnis({shoot: { width : 50, height: 25, row: 0, frames: 11, frameDelay: 4 },
-	fly: { width : 50, height: 25, row: 1, frames: 3 , frameDelay: 4 }
-	});
 	enlazers.scale = 2
 	lazers.overlaps(enlazers);
 	enemies.overlaps(enlazers);
@@ -499,7 +521,7 @@ function shootEnemyLazer()
 		{
 		let PtoEdist = dist(enemies[i].x,enemies[i].y,player1.x,player1.y);
 		let x = abs(PtoEdist);
-		if (x < 500)
+		if (x < 600)
 			{
 			enlazer = new enlazers.Sprite();
 			enlazer.ani = ['shoot','fly']
@@ -563,9 +585,7 @@ function GameOver()
 {
 		if (trip === false)
 	{
-		enemies.remove();
-		player1.remove();
-		lives.remove();
+		allSprites.remove();
 		trip = true;
 	}
 }
@@ -601,10 +621,16 @@ function PwrUpsGroup()
 
 function PwrUpsRest()
 {
-	if (PwrUps.speed > 0)
-	{
-		PwrUps.velocity *= 0.98;
+	for (let i = 0; i < PwrUps.length; i++)
+	{		
+		if (PwrUps[i].speed > 0)
+		{
+			PwrUps[i].speed *= 0.98;
+		}
 	}
+
+		PwrUps.rotationSpeed = 1;
+	
 }
 
 function PwrUpsSubGroup()
@@ -657,11 +683,24 @@ function LifePickup()
 			if (kb.pressing('space') && lifePUs[i].overlapping(player1))
 			{
 				new lives.Sprite(690 +(20 * (livesleft+1)), 525);
+				oneUpText();
 				lifePUs[i].remove();
 			}
 		}
 	}
 		//console.log(livesleft)
+}
+
+function oneUpText()
+{
+	for (let i = 0; i < 10; i++)
+	{
+		push();
+		fill(color('white'));
+		textSize(20)
+		text('+1 up', player1.x, player1.y + i);
+		pop();
+	}
 }
 
 function pwrUpDrop(x,y)
@@ -671,15 +710,23 @@ function pwrUpDrop(x,y)
 	{
 		lifePU = new lifePUs.Sprite(x,y);
 		lifePU.d = 15;
-		lifePU.color = color('green');
+		lifePU.img = 'drop items green.png'
 	}
 	if (drop == 2)
 	{
 		rapidfirePU = new rapidfirePUs.Sprite(x,y);
 		rapidfirePU.d = 15;
-		rapidfirePU.color = color('red');
+		rapidfirePU.img = 'drop items battery.png'
 	}
 	//console.log(drop);
+}
+
+function nextStageSwitch()
+{
+	if (enemies.length == 0)
+	{
+		gameState = 'nextStage';
+	}
 }
 
 //starts next stage img and trips nestStage() when enemies group == 0.
@@ -712,9 +759,6 @@ function nextStage()
 {
 		if (nextstage === true)
 	{
-		enDSStartamt += 10;
-		enEStartamt += 5;
-		createEnemies();
 		alpha1 = 0;
 	}
 	nextstage = false;
@@ -782,6 +826,37 @@ function resetButton()
 	Bttn_reset.text = "Reset";
 	Bttn_reset.textColor = color('darkgreen');
 	Bttn_reset.collider = 'k';
+
+}
+
+function resetAction()
+{
+	if (Bttn_reset.mouse.presses())
+	{
+		location.reload()
+	}
+}
+
+
+function nextStageButton()
+{
+	if (tripNextStage == false)
+	{
+		Bttn_nextStage = new buttons.Sprite(width/2, height/2, 200, 100);
+		//Bttn_nextStage.color = color('red');
+		Bttn_nextStage.text = 'CONTINUE';
+		//Bttn_nextStage.textColor = color('white');
+		tripNextStage = true;
+	}
+	if (Bttn_nextStage.mouse.presses())
+	{
+		enDSStartamt += 10;
+		enEStartamt += 5;
+		createEnemies();
+		tripNextStage = false;
+		Bttn_nextStage.remove();
+		gameState = 'run';
+	}
 }
 
 //create pointer sprite

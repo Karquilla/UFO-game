@@ -16,7 +16,6 @@ let laser;					//laser sprite
 let laserStartAnim;
 let laserFlyAnim;
 let enlaser;   				//enemy lasers sprite
-let pUFOanim;  				//animation for player ufo
 let DSexpln;
 let DSexplns;				//animation for explosion testing
 let DSxplAni;
@@ -59,6 +58,7 @@ let gameState = "title"; // title, start, run, next stage, game over.
 let tripNextStage = false;
 let beginTimer = 0;
 
+
 function setup() {
 	createCanvas(1500, 750);
 	textFont('fantasy');
@@ -71,6 +71,8 @@ function setup() {
 	//Bshield.draw();
 	Dashboard();
 	createButtons()
+	resetConfirm = new Sprite(0,0,0);
+	resetDeny = new Sprite(0,0,0);
 
 
 	//miniMap = createImage(100, 50);
@@ -78,7 +80,7 @@ function setup() {
 	//Tbeam.debug = true;
 	//scrbrd.setAlpha(100);
 	//pointer.debug = true;
-	//player1.debug = true;	
+
 }
 
 function draw() {
@@ -105,6 +107,7 @@ function draw() {
 		Pointer();
 		Lives();
 		resetButton();
+		//allSprites.debug = true;
 
 		gameState = 'run'
 	}
@@ -128,7 +131,7 @@ function draw() {
 		setPointer();
 		PwrUpsRest();
 		nextStageSwitch();
-		resetSwitch()
+		resetSwitch();
 		DrawThingsOnCam();
 		Bshield.draw();
 		Dashboard();
@@ -148,6 +151,7 @@ function draw() {
 		animation(BckgrndAni,width/2,height/2);
 		DrawThingsOnCam();
 		nextStageButton();
+		resetSwitch();
 		lives.draw();
 		Bshield.draw();
 		stageClearSprite.draw();
@@ -157,8 +161,7 @@ function draw() {
 		enemiesLeft();
 		player1.speed = 0;
 		Bttn_nextStage.draw();
-
-
+		buttons.draw();
 	}
 
 	if(gameState == 'gameOver')
@@ -228,8 +231,8 @@ function preload()
 	Bshield.scale = 1.95;
 	Bshield.collider = 'n';
 
-	pUFOanim = loadAnimation("UFO V2.png","UFO V2 STEALTH.png");
-	pUFOanim.frameDelay = 10;
+	playerSpriteAnim = loadAnimation("UFO V2.png","UFO V2 STEALTH.png");
+	playerSpriteAnim.frameDelay = 10;
 }
 
 // collecting the sprites and objects so the can be drawn on camera and are effected by the zoom.
@@ -265,7 +268,7 @@ function player()
 	//player1.diameter = 20;
 	//player1.color = color('green');
 	player1.layer = 2;
-	player1.img = pUFOanim;
+	player1.img = playerSpriteAnim;
 	player1.collider = 'k';
 }
 
@@ -586,6 +589,8 @@ function enemylaser()
 	enlasers.overlaps(enlasers);
 	lasers.overlaps(Tbeam);
 	enlasers.overlaps(Tbeam);
+	lasers.overlaps(buttons);
+	enlasers.overlaps(buttons);
 	//lasers.overlaps(PwrUps);
 	//enlasers.overlaps(PwrUps);
 }
@@ -670,25 +675,6 @@ function GameOver()
 	}
 }
 // shows how many enemies left on HUD
-function enemiesLeft()
-{
-
-	push();
-		
-	pop();
-	stroke('black');
-	fill('darkgreen');
-	textAlign(CENTER,CENTER);
-	textSize(11);
-	text("ENEMIES",1250,76);
-	push();
-	stroke('black');
-	fill('darkgreen');
-	textAlign(CENTER,CENTER);
-	textSize(20);
-	text(enemies.length,1250,91);
-	pop();
-}
 
 function PwrUpsGroup()
 {
@@ -862,15 +848,38 @@ function createHUD()
 	HUD.collider = 'none';
 }
 
+function enemiesLeft()
+{
+
+	push();
+	stroke('black');
+	fill('darkgreen');
+	textAlign(CENTER,CENTER);
+	textSize(11);
+	text("ENEMIES",1250,76);
+	pop();
+	push();
+	stroke('black');
+	fill('darkgreen');
+	textAlign(CENTER,CENTER);
+	textSize(20);
+	text(enemies.length,1250,91);
+	pop();
+}
+
+
 function createButtons()
 {
 	buttons = new Group();
-	Bttn_start = new buttons.Sprite(width/2,height/2,200,100);
+	buttons.collider = 'k';
+	Bttn_start = new buttons.Sprite(width/2,height/2 + 200,200,100);
 	Bttn_start.color = color('blue')
 	Bttn_start.text = 'START';
 	Bttn_start.textColor = color('lightblue')
 	Bttn_start.textSize = 30;
 	Bttn_start.collider = 'k';
+	//Bttn_start.img = 'empty.png';
+	
 }
 
 function startButton()
@@ -890,7 +899,7 @@ function resetButton()
 	Bttn_reset.color = color(5,25,5);
 	Bttn_reset.text = "Reset";
 	Bttn_reset.textColor = color('darkgreen');
-	Bttn_reset.collider = 'k';
+	//Bttn_reset.collider = 'k';
 
 }
 
@@ -898,7 +907,27 @@ function resetSwitch()
 {
 	if (Bttn_reset.mouse.presses())
 	{
-		location.reload()
+		resetConfirm = new buttons.Sprite(Bttn_reset.x - 50, Bttn_reset.y + 50, 40, 20);
+		resetConfirm.color = color(5,25,5);
+		resetConfirm.text = "YES";
+		resetConfirm.textColor = color('darkgreen');
+		resetDeny = new buttons.Sprite(Bttn_reset.x + 50, Bttn_reset.y + 50, 40, 20);
+		resetDeny.color = color(5,25,5);
+		resetDeny.text = "NO";
+		resetDeny.textColor = color('darkgreen');
+		resetConfirmText = new buttons.Sprite(Bttn_reset.x, Bttn_reset.y + 25, 0);
+		resetConfirmText.textColor = color('darkgreen');
+		resetConfirmText.text = "Are you sure you would like to reset?";
+	}
+	if (resetConfirm.mouse.presses())
+	{
+		location.reload();
+	}
+	if (resetDeny.mouse.presses())
+	{
+		resetDeny.remove();
+		resetConfirm.remove();
+		resetConfirmText.remove();
 	}
 }
 
@@ -942,7 +971,7 @@ function enemyIncrease()
 function Pointer()
 {
 	pointer = new Sprite(1308,135,20,20);
-	pointer.collider = 'k';
+	pointer.collider = 'n';
 	pointer.img = pointerImg;
 }
 

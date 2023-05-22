@@ -1,4 +1,6 @@
 /*	
+Copyright (c) 2023 Kyle Arquilla. Information in LICENSE.txt file
+
 	UFO Blaster 
 	Created by: Kyle Arquilla
 	Artwork by: Melissa Douglas
@@ -218,8 +220,8 @@ function preload()
 
 	Bshield = new Sprite(746,375);
 	Bshield.spriteSheet = 'Blast shield.png';
-	Bshield.addAnis({down: { width : 750, height: 375, row: 1, frames: 22, frameDelay: 9 },
-					up: { width : 750, height: 375, row: 0, frames: 23, frameDelay: 9 },
+	Bshield.addAnis({down: { width : 750, height: 375, row: 1, frames: 22, frameDelay: 6 },
+					up: { width : 750, height: 375, row: 0, frames: 23, frameDelay: 6 },
 					idleup: {width : 750, height: 375, row: 1, frames: 1 },
 					idledown: {width : 750, height: 375, row: 0, frames: 1 }});
 	Bshield.ani = 'idledown'

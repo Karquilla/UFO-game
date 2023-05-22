@@ -10,12 +10,10 @@ let BckgrndAni;
 let player1; 				//player sprite
 let life;     				//lives sprite
 let lives;    				//lives group
-let lazers;  				//lazers group
-let lazer;					//lazer sprite
-let lazerStartAnim;
-let lazerFlyAnim;
-let enlazers;  				//enemy lazers group
-let enlazer;   				//enemy lazers sprite
+let laser;					//laser sprite
+let laserStartAnim;
+let laserFlyAnim;
+let enlaser;   				//enemy lasers sprite
 let pUFOanim;  				//animation for player ufo
 let DSexpln;
 let DSexplns;				//animation for explosion testing
@@ -45,30 +43,33 @@ let enemyToplayerDist = []; //keeps an array of all the enemies distances to the
 let miniMap;            	//for testing not currently used
 let borders;            	//old boarder sprites
 let wrldCenter;         	//center of the boundry
-let lazerSheet;         	//sprite sheet for lazer
+let laserSheet;         	//sprite sheet for laser
 let lifePU;
 let lifePUs = [];
 let rapidfirePU;
 let rapidfirePUs = [];
 let rapidfiring = false;
 let PwrUps;
-let Tbeam
-let nextStageimg;       //img for next stage
+//let nextStageimg;       //img for next stage
 let plyrShotTmr = 0
 let plyrShotTmrstrt = -30;
 let gameState = "title"; // title, start, run, next stage, game over.
 let tripNextStage = false;
+let beginTimer = 0;
 
 function setup() {
 	createCanvas(1500, 750);
+	textFont('fantasy');
 	allSprites.pixelPerfect = true;
 	wrldCenter = createVector(width/2,height/2);
 	camera.x = wrldCenter.x;
 	camera.y = wrldCenter.y;
 	camera.zoom = 0.5;  //default 0.75
 	background(32,34,50);
+	//Bshield.draw();
 	Dashboard();
 	createButtons()
+
 
 	//miniMap = createImage(100, 50);
 	//nextStageSetup();
@@ -79,17 +80,23 @@ function setup() {
 }
 
 function draw() {
-	//clear();
-	startButton()
+	if (gameState == "title")
+	{
+		startButton();
+		Bshield.draw();
+		Dashboard();
+	}
+
 	if (gameState == "start")
 	{
+		Bshield.ani = ['up', 'idleup', ';;']
 		player();
 		setupEnemies();
 		createHUD();
-		Lazer();
+		laserSetup();
 		PwrUpsGroup();
 		PwrUpsSubGroup();
-		enemyLazer();
+		enemylaser();
 		explnsSpriteSetup();
 		TractorBeamSetup();
 		createEnemies();
@@ -99,53 +106,66 @@ function draw() {
 
 		gameState = 'run'
 	}
+
 	if (gameState == "run")
 	{
 		background(32,34,50);
-		camera.on();
-		push();
-		scale(2.5);
-		animation(BckgrndAni,width/2,height/2)
-		pop();
-		DrawThingsOnCam();
-		Camera1();
-		camera.off();
+
+	
 		//console.log(player1.x,player1.y);
 		setGameOver();
 		//nextStageStart();
-		lives.draw();
+	
 		FlyingLimit();
 		TractorBeam();
 		LifePickup();
 		rapidFirePickup();
 		rapidFire();
 		enemyRest();
-		buttons.draw();
+		shootEnemylaser();
 		setPointer();
-		Dashboard();
-		HUD.draw();
-		pointer.draw();
-		scoreBoard();
 		PwrUpsRest();
 		nextStageSwitch();
-		resetAction();
+		resetSwitch()
+		DrawThingsOnCam();
+		Bshield.draw();
+		Dashboard();
+		lives.draw();
+		buttons.draw();
+		HUD.draw();
+		enemiesLeft();
+		pointer.draw();
+		playerHit();
+
+		//oneUpText();
 	}
+
 	if(gameState == 'nextStage')
 	{
 		background(32,34,50);
 		animation(BckgrndAni,width/2,height/2);
-		Dashboard();
-		player1.speed = 0;
+		DrawThingsOnCam();
 		nextStageButton();
+		lives.draw();
+		Bshield.draw();
+		stageClearSprite.draw();
+		Dashboard();
+		pointer.draw();
+		HUD.draw();
+		enemiesLeft();
+		player1.speed = 0;
 		Bttn_nextStage.draw();
 
+
 	}
+
 	if(gameState == 'gameOver')
 	{
 		GameOver();
 		gameOverScreen();
 		Dashboard();
 	}
+
 	if (gameOver === false)
 	{
 
@@ -156,7 +176,7 @@ function draw() {
 //images/anims to preload
 function preload()
 {
-	nextStageimg = loadImage('stage clear2.png');
+	//nextStageimg = loadImage('stage clear2.png');
 	gameover = loadImage('you died bigger.png');
 	dashboard = loadImage('SPACESHIP WINDOW & CONTROLS XL.png');
 	pointerImg = loadImage('arrow pointer.png');
@@ -164,20 +184,29 @@ function preload()
 	BckgrndAni = loadAnimation('Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 10});
 	BckgrndAni.scale = 1.5;
 
-	Eexplns = new Group();
-	Eexplns.spriteSheet = 'eye splode v2.png';// needs fixed
-	Eexplns.addAnis({explode: { width:600, height: 400, row: 0, frames: 8, frameDelay: 5},
-									hit: { width:600, height: 400, row: 1, frames: 3, frameDelay: 15}});
+	stageClearSprite = new Sprite(750,375);
+	stageClearSprite.spriteSheet = 'stage clear ani 2.png';
+	stageClearSprite.addAnis({play: { width:1000, height: 510, row: 0, frames: 9, frameDelay: 9},
+							   end: { width:1000, height: 510, row: 1, frames: 1, frameDelay: 1},
+							 clear: { width:1000, height: 510, row: 0, frames: 1, frameDelay: 1}});
+	stageClearSprite.ani = 'clear';
+	stageClearSprite.collider = 'n';
 
-	enlazers = new Group();
-	enlazers.spriteSheet = 'blaster.png';
-	enlazers.addAnis({shoot: { width : 50, height: 25, row: 0, frames: 11, frameDelay: 4 },
+
+	Eexplns = new Group();
+	Eexplns.spriteSheet = 'eye splode v2.png';
+	Eexplns.addAnis({explode: { width:600, height: 400, row: 0, frames: 8, frameDelay: 5},
+						 hit: { width:600, height: 400, row: 1, frames: 3, frameDelay: 15}});
+
+	enlasers = new Group();
+	enlasers.spriteSheet = 'blaster.png';
+	enlasers.addAnis({shoot: { width : 50, height: 25, row: 0, frames: 11, frameDelay: 4 },
 						fly: { width : 50, height: 25, row: 1, frames: 3 , frameDelay: 4 }});
 
-	lazers = new Group();
-	lazers.spriteSheet = 'ufo zaps.png';
-	lazers.addAnis({shoot: { width : 100, height: 50, row: 0, frames: 16, frameDelay: 4 },
-					fly: { width : 100, height: 50, row: 1, frames: 3 , frameDelay: 4 }});
+	lasers = new Group();
+	lasers.spriteSheet = 'ufo zaps.png';
+	lasers.addAnis({shoot: { width : 100, height: 50, row: 0, frames: 16, frameDelay: 4 },
+					  fly: { width : 100, height: 50, row: 1, frames: 3 , frameDelay: 4 }});
 	
 	Tbeam = new Sprite();
 	Tbeam.spriteSheet = 'Beam Sheetnew.png'
@@ -187,8 +216,44 @@ function preload()
 								 idledown: {width : 100, height: 100, row: 1, frames: 1 }});
 	Tbeam.ani = 'idleup'
 
+	Bshield = new Sprite(746,375);
+	Bshield.spriteSheet = 'Blast shield.png';
+	Bshield.addAnis({down: { width : 750, height: 375, row: 1, frames: 22, frameDelay: 9 },
+					up: { width : 750, height: 375, row: 0, frames: 23, frameDelay: 9 },
+					idleup: {width : 750, height: 375, row: 1, frames: 1 },
+					idledown: {width : 750, height: 375, row: 0, frames: 1 }});
+	Bshield.ani = 'idledown'
+	Bshield.scale = 1.95;
+	Bshield.collider = 'n';
+
 	pUFOanim = loadAnimation("UFO V2.png","UFO V2 STEALTH.png");
-	pUFOanim.frameDelay = 10
+	pUFOanim.frameDelay = 10;
+}
+
+// collecting the sprites and objects so the can be drawn on camera and are effected by the zoom.
+function DrawThingsOnCam()
+{
+	camera.on();
+	Camera1();
+	push();
+	scale(2.5);
+	animation(BckgrndAni,width/2,height/2)
+	pop();
+	//playerShake();
+	enlasers.draw();
+	enemies.draw();
+	lasers.draw();
+	enemyHit();
+	laserRemove();
+	playerMove();
+	shootlaser();
+	DSexplns.draw();
+	Eexplns.draw();
+	PwrUps.draw();
+	Tbeam.draw();
+	player1.draw();
+
+	camera.off();
 }
 
 // set up player sprite
@@ -202,11 +267,18 @@ function player()
 	player1.collider = 'k';
 }
 
-function pMove()
+
+
+function playerMove()
 {
+	//keeps player from moving until shield animation is finished
+	if (frameCount - beginTimer < 198)
+	{
+		player1.speed = 0;
+	}
 	// Moves UFO with wasd and keeps it under top speed.
 	var maxSpeed = 10;
-	if (player1.speed <= maxSpeed && player1.speed >= maxSpeed * -1)
+	if (player1.speed <= maxSpeed)
 	{
 		if (kb.pressing('left'))
 			{
@@ -237,8 +309,8 @@ function pMove()
 	{
 	player1.speed *= 0.98;
 	}
-	// Make the player overlap and not collide with lazers.
-	player1.overlaps(lazers);
+	// Make the player overlap and not collide with lasers.
+	player1.overlaps(lasers);
 	//player1.draw();
 }
 
@@ -318,7 +390,7 @@ function enemyHit()
   
 	for (let i = 0; i < enemiesDS.length;i++)
 	{
-		if (enemiesDS[i].collides(lazers))
+		if (enemiesDS[i].collides(lasers))
 		{
 			DSexplnsSprite(enemiesDS[i].x + 14,enemiesDS[i].y + 15,enemiesDS[i].rotation);
 			pwrUpDrop(enemiesDS[i].x,enemiesDS[i].y);
@@ -328,7 +400,7 @@ function enemyHit()
 	}
 	for (let i = 0; i < enemiesE.length;i++)
 	{
-		if (enemiesE[i].collides(lazers))
+		if (enemiesE[i].collides(lasers))
 		{
 			EexplnsSprite(enemiesE[i].x,enemiesE[i].y,enemiesE[i].rotation);
 			pwrUpDrop(enemiesE[i].x,enemiesE[i].y);
@@ -365,77 +437,88 @@ Eexpln.ani = ['hit','explode',';;']
 Eexpln.rotation = rot;
 setTimeout(function() {Eexplns[Eexplns.length-1].remove();},1300)
 }
+
 //removes life when player is hit.
 function playerHit()
 {
 	var i = lives.length -1;
-	if (player1.collided(enlazers))
+	if (player1.collided(enlasers))
 			{
 			playerHealth -= 21;
+			playerShake();
 			lives[i].remove();
 			i--;
 			}
 }
 
-function playerShake()
+async function playerShake()
 {
-
+	let velX = player1.vel.x;
+	let velY = player1.vel.y;
+	await player1.moveTo(player1.x + 15,player1.y, 10);
+	await player1.moveTo(player1.x - 30,player1.y, 10);
+	await player1.moveTo(player1.x + 15,player1.y, 10);
+	player1.vel.x = velX - 1;
+	player1.vel.y = velY - 1;
 }
-//removes shot lazers when collided with enemy
-function laserDestr()
+//removes shot lasers when collided with enemy
+function laserRemove()
 {
-	for (let i = 0; i < lazers.length;i++)
+	for (let i = 0; i < lasers.length;i++)
 	{
-		if (lazers[i].collided(enemies))
+		if (lasers[i].collided(enemies))
 		{
-			lazers[i].remove();
+			lasers[i].remove();
 		}
 	}
-	for (let i = 0; i < enlazers.length; i++)
+	for (let i = 0; i < enlasers.length; i++)
 	{
-		if (enlazers[i].collided(player1))
+		if (enlasers[i].collided(player1))
 		{
-			enlazers[i].remove();
+			enlasers[i].remove();
 		}
 	}
-	lazers.scale = 1.2;
-	if (lazers.speed < 6)
+	lasers.scale = 1.2;
+	if (lasers.speed < 6)
 		{
-			lazers.speed *= 1.05
+			lasers.speed *= 1.05
 		}
 }
 
-// Setting up group of lazer sprites
-function Lazer()
+// Setting up group of laser sprites
+function laserSetup()
 {
 
-	lazers.width = 10;
-	lazers.speed = 1;
-	lazers.height = 15;
-	lazers.life = 300;
+	lasers.width = 10;
+	lasers.speed = 1;
+	lasers.height = 15;
+	lasers.life = 300;
 
 
 }
 
-// makes new lazer on mouse and sets properties.
-// starts lazer at player center and shoots towards mouse.
-function shootLazer()
+// makes new laser on mouse and sets properties.
+// starts laser at player center and shoots towards mouse.
+function shootlaser()
 {
-	if (rapidfiring == false)
+	if(frameCount - beginTimer > 198)
 	{
-		plyrShotTmr = frameCount - plyrShotTmrstrt;
-		if (mouse.presses())
+		if (rapidfiring == false)
 		{
-			if (plyrShotTmr >= 20)
+			plyrShotTmr = frameCount - plyrShotTmrstrt;
+			if (mouse.presses())
 			{
-				plyrShotTmrstrt = frameCount;
-				lazer = new lazers.Sprite(0,0,50,25);
-				lazer.x = player1.x;
-				lazer.y = player1.y;
-				lazer.layer = 1;
-				lazer.rotation = player1.angleTo(mouse);
-				lazer.direction = lazer.angleTo(mouse);
-				lazer.ani = ['shoot','fly']
+				if (plyrShotTmr >= 20)
+				{
+					plyrShotTmrstrt = frameCount;
+					laser = new lasers.Sprite(0,0,50,25);
+					laser.x = player1.x;
+					laser.y = player1.y;
+					laser.layer = 1;
+					laser.rotation = player1.angleTo(mouse);
+					laser.direction = laser.angleTo(mouse);
+					laser.ani = ['shoot','fly']
+				}
 			}
 		}
 	}
@@ -466,14 +549,7 @@ function Animation()
 {
 
 }
-//not used. testing
-function nextStageSetup()
-{
-	nextStageimg = new Sprite();
-	nextStageimg.d = 1;
-	nextStageimg.img = 'stage clear.png'
-	nextStageimg.collider = 'none';
-}
+
 //not used. old boarder
 function border()
 {
@@ -494,41 +570,44 @@ function FlyingLimit()
 		player1.moveTo(wrldCenter.x,wrldCenter.y,3);
 	}
 }
-//sets up enemy lazer sprite.
-function enemyLazer()
+//sets up enemy laser sprite.
+function enemylaser()
 {
-	enlazers.width = 12;
-	enlazers.height = 5;
-	enlazers.speed = 4;
-	enlazers.life = 300;
-	enlazers.layer = 1;
-	enlazers.scale = 2
-	lazers.overlaps(enlazers);
-	enemies.overlaps(enlazers);
-	enlazers.overlaps(enlazers);
-	lazers.overlaps(Tbeam);
-	enlazers.overlaps(Tbeam);
-	//lazers.overlaps(PwrUps);
-	//enlazers.overlaps(PwrUps);
+	enlasers.width = 12;
+	enlasers.height = 5;
+	enlasers.speed = 4;
+	enlasers.life = 300;
+	enlasers.layer = 1;
+	enlasers.scale = 2
+	lasers.overlaps(enlasers);
+	enemies.overlaps(enlasers);
+	enlasers.overlaps(enlasers);
+	lasers.overlaps(Tbeam);
+	enlasers.overlaps(Tbeam);
+	//lasers.overlaps(PwrUps);
+	//enlasers.overlaps(PwrUps);
 }
 
 //makes enmies shoot when player come with in a distance. shoot timer gaps the shots.
-function shootEnemyLazer()
+function shootEnemylaser()
 {//shoots once every second
-	if (frameCount % 60 == 0 )
-	{//for all enemies if distance of enemyi is less then 400px to player then enemyi shoot
-		for ( var i = 0; i < enemies.length; i++)
-		{
-		let PtoEdist = dist(enemies[i].x,enemies[i].y,player1.x,player1.y);
-		let x = abs(PtoEdist);
-		if (x < 600)
+	if (frameCount - beginTimer > 360)
+	{
+		if (frameCount % 60 == 0 )
+		{//for all enemies if distance of enemyi is less then 400px to player then enemyi shoot
+			for ( var i = 0; i < enemies.length; i++)
 			{
-			enlazer = new enlazers.Sprite();
-			enlazer.ani = ['shoot','fly']
-			enlazer.x = enemies[i].x;
-			enlazer.y = enemies[i].y;
-			enlazer.rotation = enemies[i].angleTo(player1);
-			enlazer.direction = enlazer.angleTo(player1);
+			let PtoEdist = dist(enemies[i].x,enemies[i].y,player1.x,player1.y);
+			let x = abs(PtoEdist);
+			if (x < 600)
+				{
+				enlaser = new enlasers.Sprite();
+				enlaser.ani = ['shoot','fly']
+				enlaser.x = enemies[i].x;
+				enlaser.y = enemies[i].y;
+				enlaser.rotation = enemies[i].angleTo(player1);
+				enlaser.direction = enlaser.angleTo(player1);
+				}
 			}
 		}
 	}
@@ -549,7 +628,6 @@ function gameOverScreen()
 		push();
 		textAlign(CENTER,CENTER);
 		textSize(68);
-		textFont('fantasy');
 		fill(112,22,22,alpha1);
 		text(score,930,415);
 		alpha1 += 1.5
@@ -590,7 +668,7 @@ function GameOver()
 	}
 }
 // shows how many enemies left on HUD
-function scoreBoard()
+function enemiesLeft()
 {
 
 	push();
@@ -599,14 +677,12 @@ function scoreBoard()
 	stroke('black');
 	fill('darkgreen');
 	textAlign(CENTER,CENTER);
-	textFont('fantasy');
 	textSize(11);
 	text("ENEMIES",1250,76);
 	push();
 	stroke('black');
 	fill('darkgreen');
 	textAlign(CENTER,CENTER);
-	textFont('fantasy');
 	textSize(20);
 	text(enemies.length,1250,91);
 	pop();
@@ -660,13 +736,13 @@ function rapidFire()
 		{
 			if (frameCount % 9 == 0)
 			{
-				lazer = new lazers.Sprite(0,0,50,25);
-				lazer.x = player1.x;
-				lazer.y = player1.y;
-				lazer.layer = 1;
-				lazer.rotation = player1.angleTo(mouse);
-				lazer.direction = lazer.angleTo(mouse);
-				lazer.ani = ['shoot','fly']
+				laser = new lasers.Sprite(0,0,50,25);
+				laser.x = player1.x;
+				laser.y = player1.y;
+				laser.layer = 1;
+				laser.rotation = player1.angleTo(mouse);
+				laser.direction = laser.angleTo(mouse);
+				laser.ani = ['shoot','fly']
 			}
 		}
 	}
@@ -683,7 +759,7 @@ function LifePickup()
 			if (kb.pressing('space') && lifePUs[i].overlapping(player1))
 			{
 				new lives.Sprite(690 +(20 * (livesleft+1)), 525);
-				oneUpText();
+				//oneUpText();
 				lifePUs[i].remove();
 			}
 		}
@@ -693,7 +769,7 @@ function LifePickup()
 
 function oneUpText()
 {
-	for (let i = 0; i < 10; i++)
+	for (let i = 0; i < 50; i++)
 	{
 		push();
 		fill(color('white'));
@@ -730,6 +806,7 @@ function nextStageSwitch()
 }
 
 //starts next stage img and trips nestStage() when enemies group == 0.
+/*
 function nextStageStart()
 {
 	if (gameOver === false)
@@ -754,6 +831,7 @@ function nextStageStart()
 	}
 
 }
+*/
 // adds enemies to the start amount when nextstage is true.
 function nextStage()
 {
@@ -764,24 +842,7 @@ function nextStage()
 	nextstage = false;
 }
 
-// collecting the sprites and objects so the can be drawn on camera and are effected by the zoom.
-function DrawThingsOnCam()
-{
-	enlazers.draw();
-	enemies.draw();
-	lazers.draw();
-	enemyHit();
-	laserDestr();
-	shootEnemyLazer();
-	playerHit();
-	pMove();
-	shootLazer();
-	DSexplns.draw();
-	Eexplns.draw();
-	PwrUps.draw();
-	Tbeam.draw();
-	//player1.draw();
-}
+
 //creates camera boarder/dashboard
 function Dashboard()
 {
@@ -814,10 +875,12 @@ function startButton()
 {
 	if (Bttn_start.mouse.presses())
 	{
+		beginTimer = frameCount;
 		Bttn_start.remove();
 		gameState = 'start';
 	}
 }
+
 
 function resetButton()
 {
@@ -829,7 +892,7 @@ function resetButton()
 
 }
 
-function resetAction()
+function resetSwitch()
 {
 	if (Bttn_reset.mouse.presses())
 	{
@@ -842,21 +905,35 @@ function nextStageButton()
 {
 	if (tripNextStage == false)
 	{
-		Bttn_nextStage = new buttons.Sprite(width/2, height/2, 200, 100);
+		Bttn_nextStage = new buttons.Sprite(width/2, height/2 + 100, 100, 75);
 		//Bttn_nextStage.color = color('red');
+		Bttn_nextStage.textSize = 20;
+		Bttn_nextStage.textColor = color('white');
 		Bttn_nextStage.text = 'CONTINUE';
+		Bttn_nextStage.collider = 'k';
+		Bttn_nextStage.color = color('goldenrod');
+		Bshield.ani = ['down', 'idledown'];
+		setTimeout(function() {stageClearSprite.ani = ['play','end'];},1500)
+		setTimeout(enemyIncrease,3000);
 		//Bttn_nextStage.textColor = color('white');
 		tripNextStage = true;
 	}
 	if (Bttn_nextStage.mouse.presses())
 	{
-		enDSStartamt += 10;
-		enEStartamt += 5;
-		createEnemies();
+		beginTimer = frameCount;
+		Bshield.ani = ['up', 'idleup'];
+		stageClearSprite.ani = 'clear';
 		tripNextStage = false;
 		Bttn_nextStage.remove();
 		gameState = 'run';
 	}
+}
+
+function enemyIncrease()
+{
+	enDSStartamt += 10;
+	enEStartamt += 5;
+	createEnemies();
 }
 
 //create pointer sprite
@@ -990,7 +1067,7 @@ fixed 3. enemies and pwrups still spawn out of boundry
 	5/17/23
 	- added max lives to life pickup. max lives is 5.
 	fixes
-	- enemy and player lazers no longer push power ups off into the distance.
+	- enemy and player lasers no longer push power ups off into the distance.
 	5/13/23
 	- added rapid fire to the power ups.
 	- power ups now spawn on enemy destruction with chance of 1 out of 10.

@@ -57,6 +57,7 @@ let plyrShotTmrstrt = -30;
 let gameState = "title"; // title, start, run, next stage, game over.
 let tripNextStage = false;
 let beginTimer = 0;
+let stage = 1;
 
 
 function setup() {
@@ -64,8 +65,6 @@ function setup() {
 	textFont('fantasy');
 	allSprites.pixelPerfect = true;
 	wrldCenter = createVector(width/2,height/2);
-	camera.x = wrldCenter.x;
-	camera.y = wrldCenter.y;
 	camera.zoom = 0.5;  //default 0.75
 	background(32,34,50);
 	//Bshield.draw();
@@ -75,7 +74,7 @@ function setup() {
 	resetDeny = new Sprite(0,0,0);
 
 
-	//miniMap = createImage(100, 50);
+	//miniMap = createImage(222, 75);
 	//nextStageSetup();
 	//Tbeam.debug = true;
 	//scrbrd.setAlpha(100);
@@ -95,6 +94,8 @@ function draw() {
 	{
 		Bshield.ani = ['up', 'idleup', ';;']
 		player();
+		camera.x = player1.x;
+		camera.y = player1.y;
 		setupEnemies();
 		createHUD();
 		laserSetup();
@@ -141,6 +142,8 @@ function draw() {
 		enemiesLeft();
 		pointer.draw();
 		playerHit();
+		//MiniMap()
+		console.log(player1.x)
 
 		//oneUpText();
 	}
@@ -175,13 +178,13 @@ function draw() {
 	{
 
 	}
-	//MiniMap();
+
+
 }
 
 //images/anims to preload
 function preload()
 {
-	//nextStageimg = loadImage('stage clear2.png');
 	gameover = loadImage('you died bigger.png');
 	dashboard = loadImage('SPACESHIP WINDOW & CONTROLS XL.png');
 	pointerImg = loadImage('arrow pointer.png');
@@ -264,7 +267,7 @@ function DrawThingsOnCam()
 // set up player sprite
 function player()
 {
-	player1 = new Sprite(width/2,height/2,[[57,35],[-114,0],[57,-35]]);
+	player1 = new Sprite(0,0,[[57,35],[-114,0],[57,-35]]);
 	//player1.diameter = 20;
 	//player1.color = color('green');
 	player1.layer = 2;
@@ -790,44 +793,23 @@ function nextStageSwitch()
 	if (enemies.length == 0)
 	{
 		gameState = 'nextStage';
+		stage += 1;
 	}
 }
 
-//starts next stage img and trips nestStage() when enemies group == 0.
-/*
-function nextStageStart()
-{
-	if (gameOver === false)
-	{
-		if (enemies.length === 0)
-		{
-			push();
-			if (alpha1 < 240)
-			{
-				alpha1 += 1;
-				tint(255,alpha1)
-			}
-			scale(1.5);
-			image(nextStageimg,0,0)
-			pop()
-			if (alpha1 === 240)
-			{
-				nextStage();
-				nextstage = true;
-			}
-		}
-	}
 
-}
-*/
-// adds enemies to the start amount when nextstage is true.
-function nextStage()
+function stageNumber()
 {
-		if (nextstage === true)
-	{
-		alpha1 = 0;
-	}
-	nextstage = false;
+	push();
+	textSize(11);
+	textAlign(CENTER,CENTER);
+	stroke('black');
+	fill(color('darkgreen'))
+	text("STAGE", 1370,76);
+	textSize(20);
+	text(stage, 1370,91)
+	pop();
+
 }
 
 
@@ -865,6 +847,7 @@ function enemiesLeft()
 	textSize(20);
 	text(enemies.length,1250,91);
 	pop();
+	stageNumber()
 }
 
 
@@ -1060,21 +1043,29 @@ function TractorBeam()
 
 
 //was trying to make mini map instead of arrow pointer
-/*
+
 function MiniMap()
 {
+	miniMap.loadPixels();
+	for (let pixX = 0; pixX < 0; pixX++)
+	{
+		for (let pixY = 0; pixY < 0; pixY++)
+		{
+			miniMap.set(pixX,pixY,)
+		}
+	}
 	for (let i = 0; i < enemies.length; i++)
 	{
-		miniMap.loadPixels();
-		miniMap.set(enemies[i].x / 3, enemies[i].y / 3, color('red'));
+		miniMap.set(enemies[i].x / 10, enemies[i].y / 10, color('red'));
+		miniMap.set(player1.x / 10 , player1.y / 10, color('green'))
 	}
 	miniMap.updatePixels();
 	push();
-	scale(5);
-	image(miniMap, 500, 500);
+	//scale(5);
+	image(miniMap, 1000, 500);
 	pop();
 }
-*/
+
 
 
 
@@ -1087,6 +1078,9 @@ new enemy is close "enough".
 fixed 3. enemies and pwrups still spawn out of boundry
 4. balancing
 5. background need resized
+
+enemy spawning near player because i fixed player starting location
+maybe have player move back to center before spawning next wave of enemies make it easier to ensure that no enmeies will spawn to close
 
 		WIP
 1. power ups. currently just add life.// added rapid fire

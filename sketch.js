@@ -7,6 +7,10 @@ Copyright (c) 2023 Kyle Arquilla. Information in LICENSE.txt file
 */
 
 const maxLives = 5;
+let enDSStartamt = 1;    	//enemy start amount
+let enEStartamt = 0;    	//enemy eye start amount
+const enDSIncAmt = 1;         // default 10
+const enEIncAmt = 1;          // default 5
 let alpha1 = 0;         	//sets alpha for next stage
 let BckgrndAni;
 let player1; 				//player sprite
@@ -21,7 +25,6 @@ let DSexplns;				//animation for explosion testing
 let DSxplAni;
 let Eexpln;
 let Eexplns;				//animation for explosion testing
-let EexplAni;
 let enemies;  				//enemies group
 let enemiesDS;
 let enemiesE;        
@@ -33,8 +36,6 @@ let playerHealth = 100; 	// player health not currently in use
 let gameOver = false;   	// boolean to check if game over
 let trip = false;       
 let score = 0;          	//total amount of enemies killed
-let enDSStartamt = 1;    	//enemy start amount
-let enEStartamt = 0;    	//enemy eye start amount
 let nextstage = false;  	//turns true when next stage starts false again when next stage is doen setting up.
 let paused = false;     	//not used
 let HUD;                	//hud sprite
@@ -43,15 +44,13 @@ let pointer;            	//pointer sprite
 let enemyToplayerDist = []; //keeps an array of all the enemies distances to the player
 let miniMap;            	//for testing not currently used
 let borders;            	//old boarder sprites
-let wrldCenter;         	//center of the boundry
-let laserSheet;         	//sprite sheet for laser
+let wrldCenter;         	//center of the boundry     
 let lifePU;
 let lifePUs = [];
 let rapidfirePU;
 let rapidfirePUs = [];
 let rapidfiring = false;
 let PwrUps;
-//let nextStageimg;       //img for next stage
 let plyrShotTmr = 0
 let plyrShotTmrstrt = -30;
 let gameState = "title"; // title, start, run, next stage, game over.
@@ -65,13 +64,15 @@ function setup() {
 	textFont('fantasy');
 	allSprites.pixelPerfect = true;
 	wrldCenter = createVector(width/2,height/2);
-	camera.zoom = 0.5;  //default 0.75
+
 	background(32,34,50);
+	createHUD();
 	//Bshield.draw();
 	Dashboard();
 	createButtons()
 	resetConfirm = new Sprite(0,0,0);
 	resetDeny = new Sprite(0,0,0);
+	instructionsSetup()
 
 
 	//miniMap = createImage(222, 75);
@@ -88,16 +89,17 @@ function draw() {
 		startButton();
 		Bshield.draw();
 		Dashboard();
+		instructions();
 	}
 
 	if (gameState == "start")
 	{
 		Bshield.ani = ['up', 'idleup', ';;']
+		camera.zoom = 0.5;  //default 0.75
 		player();
 		camera.x = player1.x;
 		camera.y = player1.y;
 		setupEnemies();
-		createHUD();
 		laserSetup();
 		PwrUpsGroup();
 		PwrUpsSubGroup();
@@ -173,13 +175,6 @@ function draw() {
 		gameOverScreen();
 		Dashboard();
 	}
-
-	if (gameOver === false)
-	{
-
-	}
-
-
 }
 
 //images/anims to preload
@@ -188,17 +183,20 @@ function preload()
 	gameover = loadImage('you died bigger.png');
 	dashboard = loadImage('SPACESHIP WINDOW & CONTROLS XL.png');
 	pointerImg = loadImage('arrow pointer.png');
+	battery = loadImage('drop items battery.png');
+	greenItem = loadImage('drop items green.png');
 	DSxplAni = loadAnimation('splode v3.png', { frameSize: [540, 420], frames: 10, frameDelay: 5})
 	BckgrndAni = loadAnimation('Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 10});
 	BckgrndAni.scale = 1.5;
 
-	stageClearSprite = new Sprite(750,375);
+	stageClearSprite = new Sprite(750,250);
 	stageClearSprite.spriteSheet = 'stage clear ani 2.png';
-	stageClearSprite.addAnis({play: { width:1000, height: 510, row: 0, frames: 9, frameDelay: 9},
-							   end: { width:1000, height: 510, row: 1, frames: 1, frameDelay: 1},
-							 clear: { width:1000, height: 510, row: 0, frames: 1, frameDelay: 1}});
+	stageClearSprite.addAnis({play: { width:1592, height: 800, row: 0, frames: 10, frameDelay: 9},
+							   end: { width:1592, height: 800, row: 1, frames: 1, frameDelay: 1},
+							 clear: { width:1592, height: 800, row: 0, frames: 1, frameDelay: 1}});
 	stageClearSprite.ani = 'clear';
 	stageClearSprite.collider = 'n';
+	//stageClearSprite.scale = 1.75;
 
 
 	Eexplns = new Group();
@@ -714,7 +712,8 @@ function rapidFirePickup()
 		{
 			rapidfiring = true;
 			rapidfirePUs[i].remove();
-			setTimeout(function() {rapidfiring = false;}, 7000);
+			//lasts for 10 seconds
+			setTimeout(function() {rapidfiring = false;}, 10000);
 		}
 	}
 }
@@ -772,14 +771,14 @@ function oneUpText()
 
 function pwrUpDrop(x,y)
 {
-	let drop = Math.floor(random(0,10))
+	let drop = Math.floor(random(0,15))
 	if (drop == 1)
 	{
 		lifePU = new lifePUs.Sprite(x,y);
 		lifePU.d = 15;
 		lifePU.img = 'drop items green.png'
 	}
-	if (drop == 2)
+	if (drop == 7)
 	{
 		rapidfirePU = new rapidfirePUs.Sprite(x,y);
 		rapidfirePU.d = 15;
@@ -824,15 +823,73 @@ function Dashboard()
 // creates HUD in top right corner
 function createHUD()
 {
-	HUD = new Sprite(1309, 135,172,135);
+	HUD = new Sprite(1309, 135,173,135);
 	HUD.color = color(5,25,5,180);
 	//HUD.layer = 5;
 	HUD.collider = 'none';
+	HUD.strokeWeight = 0;
+}
+
+function instructionsSetup()
+{
+	batterySprite = new Sprite(1200,height/2 + 20);
+	batterySprite.img = battery;
+	batterySprite.rotationSpeed = 1;
+	batterySprite.offset.x = 5;
+	batterySprite.collider = 'n';
+	rapidFireSprite = new Sprite(batterySprite.x,batterySprite.y + 50);
+	rapidFireSprite.img = greenItem;
+	rapidFireSprite.rotationSpeed = 1;
+	rapidFireSprite.offset.x = 4;
+	rapidFireSprite.collider = 'n';
+	rapidFireSprite.scale = 0.75
+}
+
+function instructions()
+{
+	// Power up instructions
+	push();
+	fill(color(5,25,5,180));
+	rect(batterySprite.x - 30, batterySprite.y - 30,240,110)
+	stroke('black');
+	strokeWeight(2);
+	fill(color('darkgreen'));
+	textAlign(LEFT,CENTER);
+	textSize(20);
+	text(" - Extra Life",batterySprite.x + 25, batterySprite.y);
+	text(" - Rapid Fire Power-up",batterySprite.x + 25, batterySprite.y + 50);
+	pop();
+
+	let instX = 300;
+	let instY = 200;
+	let textW = 195;
+
+	// general game instructions
+	push();
+	fill(color(5, 25, 5, 180));
+	rect(instX, instY, 200, 300);
+	stroke('black');
+	strokeWeight(2);
+	fill(color('darkgreen'));
+	textAlign(CENTER, TOP);
+	textSize(20);
+	text("HOW TO PLAY",instX,instY + 10, 200, 300);
+	line(instX, instY + 35, instX + 200, instY + 35)
+	textSize(15);
+	textAlign(LEFT, TOP);
+	text("LMB = FIRE",instX + 20,instY + 40, 200, 300);
+	text("WASD = MOVE",instX + 20,instY + 60, 200, 300);
+	text("SPACE = TRACTOR BEAM",instX + 20,instY + 80, 200, 300);
+	line(instX, instY + 100, instX + 200, instY + 100);
+	textAlign(CENTER, TOP);
+	text("Destroy all of the enemy space ships to move on.", instX + 5, instY + 120, textW-3, 300);
+	text("Use the tractor beam to collect power ups", instX+5, instY + 165, textW - 3, 300);
+	text("Lives are displayed at the bottom of the window - If you lose all your lives it's game over.", instX, instY + 210, textW, 300);
+	pop();
 }
 
 function enemiesLeft()
 {
-
 	push();
 	stroke('black');
 	fill('darkgreen');
@@ -855,7 +912,7 @@ function createButtons()
 {
 	buttons = new Group();
 	buttons.collider = 'k';
-	Bttn_start = new buttons.Sprite(width/2,height/2 + 200,200,100);
+	Bttn_start = new buttons.Sprite(width/2,height/2 + 100,100,50);
 	Bttn_start.color = color('blue')
 	Bttn_start.text = 'START';
 	Bttn_start.textColor = color('lightblue')
@@ -871,6 +928,8 @@ function startButton()
 	{
 		beginTimer = frameCount;
 		Bttn_start.remove();
+		rapidFireSprite.remove();
+		batterySprite.remove();
 		gameState = 'start';
 	}
 }
@@ -945,8 +1004,8 @@ function nextStageButton()
 
 function enemyIncrease()
 {
-	enDSStartamt += 10;
-	enEStartamt += 5;
+	enDSStartamt += enDSIncAmt;
+	enEStartamt += enEIncAmt;
 	createEnemies();
 }
 

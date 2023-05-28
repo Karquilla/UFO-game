@@ -181,16 +181,16 @@ function draw() {
 function preload()
 {
 	gameover = loadImage('you died bigger.png');
-	dashboard = loadImage('SPACESHIP WINDOW & CONTROLS XL.png');
-	pointerImg = loadImage('arrow pointer.png');
-	battery = loadImage('drop items battery.png');
-	greenItem = loadImage('drop items green.png');
-	DSxplAni = loadAnimation('splode v3.png', { frameSize: [540, 420], frames: 10, frameDelay: 5})
-	BckgrndAni = loadAnimation('Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 10});
+	dashboard = loadImage('assets/SPACESHIP WINDOW & CONTROLS XL.png');
+	pointerImg = loadImage('assets/arrow pointer.png');
+	battery = loadImage('assets/drop items battery.png');
+	greenItem = loadImage('assets/drop items green.png');
+	DSxplAni = loadAnimation('assets/splode v3.png', { frameSize: [540, 420], frames: 10, frameDelay: 5})
+	BckgrndAni = loadAnimation('assets/Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 10});
 	BckgrndAni.scale = 1.5;
 
 	stageClearSprite = new Sprite(750,250);
-	stageClearSprite.spriteSheet = 'stage clear ani 2.png';
+	stageClearSprite.spriteSheet = 'assets/stage clear ani 2.png';
 	stageClearSprite.addAnis({play: { width:1592, height: 800, row: 0, frames: 10, frameDelay: 9},
 							   end: { width:1592, height: 800, row: 1, frames: 1, frameDelay: 1},
 							 clear: { width:1592, height: 800, row: 0, frames: 1, frameDelay: 1}});
@@ -200,22 +200,22 @@ function preload()
 
 
 	Eexplns = new Group();
-	Eexplns.spriteSheet = 'eye splode v2.png';
+	Eexplns.spriteSheet = 'assets/eye splode v2.png';
 	Eexplns.addAnis({explode: { width:600, height: 400, row: 0, frames: 8, frameDelay: 5},
 						 hit: { width:600, height: 400, row: 1, frames: 3, frameDelay: 15}});
 
 	enlasers = new Group();
-	enlasers.spriteSheet = 'blaster.png';
+	enlasers.spriteSheet = 'assets/blaster.png';
 	enlasers.addAnis({shoot: { width : 50, height: 25, row: 0, frames: 11, frameDelay: 4 },
 						fly: { width : 50, height: 25, row: 1, frames: 3 , frameDelay: 4 }});
 
 	lasers = new Group();
-	lasers.spriteSheet = 'ufo zaps.png';
+	lasers.spriteSheet = 'assets/ufo zaps.png';
 	lasers.addAnis({shoot: { width : 100, height: 50, row: 0, frames: 16, frameDelay: 4 },
 					  fly: { width : 100, height: 50, row: 1, frames: 3 , frameDelay: 4 }});
 	
 	Tbeam = new Sprite();
-	Tbeam.spriteSheet = 'Beam Sheetnew.png'
+	Tbeam.spriteSheet = 'assets/Beam Sheet.png'
 	Tbeam.addAnis({down: { width : 100, height: 100, row: 0, frames: 6, frameDelay: 10 },
 								 up: { width : 100, height: 100, row: 1, frames: 6 , frameDelay: 10 },
 								 idleup: {width : 100, height: 100, row: 0, frames: 1 },
@@ -223,7 +223,7 @@ function preload()
 	Tbeam.ani = 'idleup'
 
 	Bshield = new Sprite(746,375);
-	Bshield.spriteSheet = 'Blast shield.png';
+	Bshield.spriteSheet = 'assets/Blast shield.png';
 	Bshield.addAnis({down: { width : 750, height: 375, row: 1, frames: 22, frameDelay: 6 },
 					up: { width : 750, height: 375, row: 0, frames: 23, frameDelay: 6 },
 					idleup: {width : 750, height: 375, row: 1, frames: 1 },
@@ -232,7 +232,7 @@ function preload()
 	Bshield.scale = 1.95;
 	Bshield.collider = 'n';
 
-	playerSpriteAnim = loadAnimation("UFO V2.png","UFO V2 STEALTH.png");
+	playerSpriteAnim = loadAnimation("assets/UFO V2.png","assets/UFO V2 STEALTH.png");
 	playerSpriteAnim.frameDelay = 10;
 }
 
@@ -326,8 +326,8 @@ function setupEnemies()
 	enemiesDS = new enemies.Group();
 	enemiesE = new enemies.Group();
 	enemies.d = 75;
-	enemiesDS.img = 'BrainStation.png';
-	enemiesE.img = 'EYE.png';
+	enemiesDS.img = 'assets/BrainStation.png';
+	enemiesE.img = 'assets/EYE.png';
 	//enemies.x = () => random(-100,100) * 10;
 	//enemies.y = () => random(-100,100) * 10;
 	enemies.layer = 3;
@@ -776,13 +776,13 @@ function pwrUpDrop(x,y)
 	{
 		lifePU = new lifePUs.Sprite(x,y);
 		lifePU.d = 15;
-		lifePU.img = 'drop items green.png'
+		lifePU.img = 'assets/drop items green.png'
 	}
 	if (drop == 7)
 	{
 		rapidfirePU = new rapidfirePUs.Sprite(x,y);
 		rapidfirePU.d = 15;
-		rapidfirePU.img = 'drop items battery.png'
+		rapidfirePU.img = 'assets/drop items battery.png'
 	}
 	//console.log(drop);
 }
@@ -918,7 +918,7 @@ function createButtons()
 	Bttn_start.textColor = color('lightblue')
 	Bttn_start.textSize = 30;
 	Bttn_start.collider = 'k';
-	//Bttn_start.img = 'empty.png';
+	//Bttn_start.img = 'assets/empty.png';
 	
 }
 

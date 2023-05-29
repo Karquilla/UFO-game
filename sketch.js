@@ -56,6 +56,7 @@ let plyrShotTmrstrt = -30;
 let gameState = "title"; // title, start, run, next stage, game over.
 let tripNextStage = false;
 let beginTimer = 0;
+let stageCooldown = 0;
 let stage = 1;
 
 
@@ -64,7 +65,6 @@ function setup() {
 	textFont('fantasy');
 	allSprites.pixelPerfect = true;
 	wrldCenter = createVector(width/2,height/2);
-
 	background(32,34,50);
 	createHUD();
 	//Bshield.draw();
@@ -74,13 +74,7 @@ function setup() {
 	resetDeny = new Sprite(0,0,0);
 	instructionsSetup()
 
-
 	//miniMap = createImage(222, 75);
-	//nextStageSetup();
-	//Tbeam.debug = true;
-	//scrbrd.setAlpha(100);
-	//pointer.debug = true;
-
 }
 
 function draw() {
@@ -89,6 +83,7 @@ function draw() {
 		startButton();
 		Bshield.draw();
 		Dashboard();
+		HUD.draw();
 		instructions();
 	}
 
@@ -141,11 +136,12 @@ function draw() {
 		lives.draw();
 		buttons.draw();
 		HUD.draw();
+		rapidFireLight();
 		enemiesLeft();
 		pointer.draw();
 		playerHit();
 		//MiniMap()
-		console.log(player1.x)
+		//console.log(player1.x)
 
 		//oneUpText();
 	}
@@ -180,7 +176,6 @@ function draw() {
 //images/anims to preload
 function preload()
 {
-	gameover = loadImage('you died bigger.png');
 	dashboard = loadImage('assets/SPACESHIP WINDOW & CONTROLS XL.png');
 	pointerImg = loadImage('assets/arrow pointer.png');
 	battery = loadImage('assets/drop items battery.png');
@@ -198,6 +193,13 @@ function preload()
 	stageClearSprite.collider = 'n';
 	//stageClearSprite.scale = 1.75;
 
+	gameOverSprite = new Sprite(750,250);
+	gameOverSprite.spriteSheet = 'assets/gameOver.png'
+	gameOverSprite.addAnis({play: { width:1196, height: 600, row: 0, frames: 8, frameDelay: 9},
+							 end: { width:1196, height: 600, row: 1, frames: 1, frameDelay: 1},
+	  					   clear: { width:1196, height: 600, row: 0, frames: 1, frameDelay: 1}});
+	gameOverSprite.ani = 'clear';
+	gameOverSprite.collider = 'n';
 
 	Eexplns = new Group();
 	Eexplns.spriteSheet = 'assets/eye splode v2.png';
@@ -222,14 +224,14 @@ function preload()
 								 idledown: {width : 100, height: 100, row: 1, frames: 1 }});
 	Tbeam.ani = 'idleup'
 
-	Bshield = new Sprite(746,375);
+	Bshield = new Sprite(747,375);
 	Bshield.spriteSheet = 'assets/Blast shield.png';
 	Bshield.addAnis({down: { width : 750, height: 375, row: 1, frames: 22, frameDelay: 6 },
 					up: { width : 750, height: 375, row: 0, frames: 23, frameDelay: 6 },
 					idleup: {width : 750, height: 375, row: 1, frames: 1 },
 					idledown: {width : 750, height: 375, row: 0, frames: 1 }});
 	Bshield.ani = 'idledown'
-	Bshield.scale = 1.95;
+	Bshield.scale = 1.96;
 	Bshield.collider = 'n';
 
 	playerSpriteAnim = loadAnimation("assets/UFO V2.png","assets/UFO V2 STEALTH.png");
@@ -624,23 +626,8 @@ function shootEnemylaser()
 //sets up game over img and shows total enemies killed before game over.
 function gameOverScreen()
 {	
-
-		push();
-		if (alpha1 < 200)
-		{
-		tint(255,alpha1)
-		alpha1 += 1;
-		}
-		image(gameover,0,0);
-		pop();
-		push();
-		textAlign(CENTER,CENTER);
-		textSize(68);
-		fill(112,22,22,alpha1);
-		text(score,930,415);
-		alpha1 += 1.5
-		pop();
-
+	Bshield.ani = ['down','idledown']
+	setTimeout(function() {gameOverSprite.ani = ['run','end'];},1500)
 }
 
 
@@ -656,7 +643,7 @@ function setGameOver()
 function Lives()
 {
 	lives = new Group();
-	lives.img = 'UFO V2.png';
+	lives.img = 'assets/UFO V2.png';
 	lives.d = 5;
 	lives.collider = 'none';
 	lives.scale = 0.25;
@@ -792,6 +779,7 @@ function nextStageSwitch()
 	if (enemies.length == 0)
 	{
 		gameState = 'nextStage';
+		stageCooldown = frameCount;
 		stage += 1;
 	}
 }
@@ -830,19 +818,35 @@ function createHUD()
 	HUD.strokeWeight = 0;
 }
 
+function rapidFireLight()
+{
+	if (rapidfiring == true)
+	{
+		push();
+		stroke(color('black'))
+		//strokeWeight(2);
+		fill(color('darkred'));
+		textSize(14)
+		text("RAPID-FIRE ACTIVATED",HUD.x-62,HUD.y + 60);
+		pop();
+	}
+}
+
 function instructionsSetup()
 {
-	batterySprite = new Sprite(1200,height/2 + 20);
-	batterySprite.img = battery;
-	batterySprite.rotationSpeed = 1;
-	batterySprite.offset.x = 5;
-	batterySprite.collider = 'n';
-	rapidFireSprite = new Sprite(batterySprite.x,batterySprite.y + 50);
-	rapidFireSprite.img = greenItem;
+	greenItemSprite = new Sprite(1195,height/2 + 20);
+	greenItemSprite.img = greenItem;
+	greenItemSprite.rotationSpeed = 1;
+	greenItemSprite.offset.x = 5;
+	greenItemSprite.collider = 'n';
+	greenItemSprite.scale = 0.70;
+	rapidFireSprite = new Sprite(greenItemSprite.x,greenItemSprite.y + 50);
+	rapidFireSprite.img = battery;
 	rapidFireSprite.rotationSpeed = 1;
 	rapidFireSprite.offset.x = 4;
 	rapidFireSprite.collider = 'n';
-	rapidFireSprite.scale = 0.75
+	rapidFireSprite.scale = 0.85;
+	
 }
 
 function instructions()
@@ -850,17 +854,17 @@ function instructions()
 	// Power up instructions
 	push();
 	fill(color(5,25,5,180));
-	rect(batterySprite.x - 30, batterySprite.y - 30,240,110)
+	rect(greenItemSprite.x - 30, greenItemSprite.y - 30,245,110)
 	stroke('black');
 	strokeWeight(2);
 	fill(color('darkgreen'));
 	textAlign(LEFT,CENTER);
 	textSize(20);
-	text(" - Extra Life",batterySprite.x + 25, batterySprite.y);
-	text(" - Rapid Fire Power-up",batterySprite.x + 25, batterySprite.y + 50);
+	text(" - Extra Life",greenItemSprite.x + 25, greenItemSprite.y);
+	text(" - Rapid Fire Power-up",greenItemSprite.x + 25, greenItemSprite.y + 50);
 	pop();
 
-	let instX = 300;
+	let instX = 150;
 	let instY = 200;
 	let textW = 195;
 
@@ -877,10 +881,10 @@ function instructions()
 	line(instX, instY + 35, instX + 200, instY + 35)
 	textSize(15);
 	textAlign(LEFT, TOP);
-	text("LMB = FIRE",instX + 20,instY + 40, 200, 300);
-	text("WASD = MOVE",instX + 20,instY + 60, 200, 300);
-	text("SPACE = TRACTOR BEAM",instX + 20,instY + 80, 200, 300);
-	line(instX, instY + 100, instX + 200, instY + 100);
+	text("LMB = FIRE",instX + 20,instY + 45, 200, 300);
+	text("WASD = MOVE",instX + 20,instY + 65, 200, 300);
+	text("SPACE = TRACTOR BEAM",instX + 20,instY + 85, 200, 300);
+	line(instX, instY + 110, instX + 200, instY + 110);
 	textAlign(CENTER, TOP);
 	text("Destroy all of the enemy space ships to move on.", instX + 5, instY + 120, textW-3, 300);
 	text("Use the tractor beam to collect power ups", instX+5, instY + 165, textW - 3, 300);
@@ -929,7 +933,7 @@ function startButton()
 		beginTimer = frameCount;
 		Bttn_start.remove();
 		rapidFireSprite.remove();
-		batterySprite.remove();
+		greenItemSprite.remove();
 		gameState = 'start';
 	}
 }
@@ -976,6 +980,7 @@ function resetSwitch()
 
 function nextStageButton()
 {
+
 	if (tripNextStage == false)
 	{
 		Bttn_nextStage = new buttons.Sprite(width/2, height/2 + 100, 100, 75);
@@ -991,14 +996,17 @@ function nextStageButton()
 		//Bttn_nextStage.textColor = color('white');
 		tripNextStage = true;
 	}
-	if (Bttn_nextStage.mouse.presses())
+	if(frameCount - stageCooldown > 210)
 	{
-		beginTimer = frameCount;
-		Bshield.ani = ['up', 'idleup'];
-		stageClearSprite.ani = 'clear';
-		tripNextStage = false;
-		Bttn_nextStage.remove();
-		gameState = 'run';
+		if (Bttn_nextStage.mouse.presses())
+		{
+			beginTimer = frameCount;
+			Bshield.ani = ['up', 'idleup'];
+			stageClearSprite.ani = 'clear';
+			tripNextStage = false;
+			Bttn_nextStage.remove();
+			gameState = 'run';
+		}
 	}
 }
 
@@ -1129,25 +1137,29 @@ function MiniMap()
 
 
 /*  ISSUES
-*** need to add start button working on setting up game loop. title => start => run => game over => restart
-                                                                                	||=>reset
-fixed 1. pointer does not always point to next enemy after first enemy is killd. starts working again once 
-new enemy is close "enough".
+1. enemy rotation.
 2. i believe enemy explosions animation doesnt finish if killing enemies in quick succesion
-fixed 3. enemies and pwrups still spawn out of boundry
+fixed 
+3. enemies may get pushed out of bounds if spawned near player and moved
 4. balancing
 5. background need resized
 
-enemy spawning near player because i fixed player starting location
-maybe have player move back to center before spawning next wave of enemies make it easier to ensure that no enmeies will spawn to close
 
 		WIP
 1. power ups. currently just add life.// added rapid fire
-2. life powerup sprite
-3. might make canvas bigger and make play area bigger
+2. adding asteroids
+3. add homing missles for eye balls
+
 
 
 	CHANGE LOG 
+	5/28/23
+	- added instructions
+	- added player hit animation
+	- reset option (refreshes page)
+	- added start screen
+	- added next stage screen
+	- added stage count
 	5/17/23
 	- added max lives to life pickup. max lives is 5.
 	fixes

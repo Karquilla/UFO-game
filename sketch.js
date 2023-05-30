@@ -6,11 +6,11 @@ Copyright (c) 2023 Kyle Arquilla. Information in LICENSE.txt file
 	Artwork by: Melissa Douglas
 */
 
-const maxLives = 5;
-let enDSStartamt = 1;    	//enemy start amount
-let enEStartamt = 0;    	//enemy eye start amount
-const enDSIncAmt = 1;         // default 10
-const enEIncAmt = 1;          // default 5
+const MAX_LIVES = 5;
+const enDSIncAmt = 10;         // default 10
+const enEIncAmt = 5;          // default 5
+let enDSStartamt = 10;    	//enemy start amount
+let enEStartamt = 5;    	//enemy eye start amount
 let alpha1 = 0;         	//sets alpha for next stage
 let BckgrndAni;
 let player1; 				//player sprite
@@ -32,7 +32,6 @@ let enemyDS;           		//enemies sub group
 let enemyE              	//enemies sub group
 let buttons;
 let Bttn_reset;
-let playerHealth = 100; 	// player health not currently in use
 let gameOver = false;   	// boolean to check if game over
 let trip = false;       
 let score = 0;          	//total amount of enemies killed
@@ -67,7 +66,6 @@ function setup() {
 	wrldCenter = createVector(width/2,height/2);
 	background(32,34,50);
 	createHUD();
-	//Bshield.draw();
 	Dashboard();
 	createButtons()
 	resetConfirm = new Sprite(0,0,0);
@@ -113,12 +111,6 @@ function draw() {
 	if (gameState == "run")
 	{
 		background(32,34,50);
-
-	
-		//console.log(player1.x,player1.y);
-		setGameOver();
-		//nextStageStart();
-	
 		FlyingLimit();
 		TractorBeam();
 		LifePickup();
@@ -140,10 +132,11 @@ function draw() {
 		enemiesLeft();
 		pointer.draw();
 		playerHit();
+		setGameOver();
 		//MiniMap()
-		//console.log(player1.x)
-
 		//oneUpText();
+		//console.log(player1.x)
+		//console.log(player1.x,player1.y);
 	}
 
 	if(gameState == 'nextStage')
@@ -167,13 +160,13 @@ function draw() {
 
 	if(gameState == 'gameOver')
 	{
-		GameOver();
+		//GameOver();
 		gameOverScreen();
 		Dashboard();
 	}
 }
 
-//images/anims to preload
+// images/anims to preload
 function preload()
 {
 	dashboard = loadImage('assets/SPACESHIP WINDOW & CONTROLS XL.png');
@@ -193,9 +186,9 @@ function preload()
 	stageClearSprite.collider = 'n';
 	//stageClearSprite.scale = 1.75;
 
-	gameOverSprite = new Sprite(750,250);
-	gameOverSprite.spriteSheet = 'assets/gameOver.png'
-	gameOverSprite.addAnis({play: { width:1196, height: 600, row: 0, frames: 8, frameDelay: 9},
+	gameOverSprite = new Sprite(745,400);
+	gameOverSprite.spriteSheet = "assets/gameOver.png"
+	gameOverSprite.addAnis({play: { width:1196, height: 600, row: 0, frames: 8, frameDelay: 7},
 							 end: { width:1196, height: 600, row: 1, frames: 1, frameDelay: 1},
 	  					   clear: { width:1196, height: 600, row: 0, frames: 1, frameDelay: 1}});
 	gameOverSprite.ani = 'clear';
@@ -386,7 +379,7 @@ function enemyRest()
 			if(enemies[i].rotation != 0)
 			{
 				//setTimeout(function() {if (enemies.length != 0) {enemies[i].rotateTo(0,1.5);}}, 1000);
-			enemies[i].rotation = floor(enemies[i].rotation * 0.98);
+			enemies[i].rotateTo(0,5);
 			//console.log(enemies[i].rotaion)
 			}
 		}
@@ -452,7 +445,6 @@ function playerHit()
 	var i = lives.length -1;
 	if (player1.collided(enlasers))
 			{
-			playerHealth -= 21;
 			playerShake();
 			lives[i].remove();
 			i--;
@@ -626,8 +618,38 @@ function shootEnemylaser()
 //sets up game over img and shows total enemies killed before game over.
 function gameOverScreen()
 {	
-	Bshield.ani = ['down','idledown']
-	setTimeout(function() {gameOverSprite.ani = ['run','end'];},1500)
+	background(32,34,50);
+	animation(BckgrndAni,width/2,height/2);
+	Bshield.draw();
+	gameOverSprite.draw();
+
+
+	if (alpha1 < 255)
+	{
+		alpha1 += 1.2
+	}
+	push();
+	textAlign(CENTER,CENTER);
+	textSize(32);
+	fill(112,22,22,alpha1);
+	stroke('black')
+	text(score,gameOverSprite.x + 6,gameOverSprite.y + 40);
+	pop();
+	push();
+	textAlign(CENTER,CENTER);
+	if (stage > 10)
+	{
+		textSize(28);
+	}
+	else
+	{
+		textSize(35);
+	}
+	fill(112,22,22,alpha1);
+	stroke('black')
+	text(stage,gameOverSprite.x + 105,gameOverSprite.y - 242);
+	pop();
+
 }
 
 
@@ -636,6 +658,13 @@ function setGameOver()
 	if (lives.length == 0)
 	{
 		gameState = 'gameOver'
+		Bshield.ani = ['down','idledown']
+		gameOverSprite.ani = ['play','end']
+		player1.remove();
+		enemies.remove();
+		enlasers.remove();
+		lasers.remove();
+		PwrUps.remove();
 	}
 }
 
@@ -647,22 +676,12 @@ function Lives()
 	lives.d = 5;
 	lives.collider = 'none';
 	lives.scale = 0.25;
-	for (var i= 1; i <= 5; i++)
+	for (var i= 1; i <= MAX_LIVES; i++)
 	{
 		new lives.Sprite(690 +(20 * i), 525);
 	}
 }
 
-//removes left over sprites when game over
-function GameOver()
-{
-		if (trip === false)
-	{
-		allSprites.remove();
-		trip = true;
-	}
-}
-// shows how many enemies left on HUD
 
 function PwrUpsGroup()
 {
@@ -729,7 +748,7 @@ function rapidFire()
 function LifePickup()
 {
 	let livesleft = lives.length;
-	if (lives.length < maxLives)
+	if (lives.length < MAX_LIVES)
 	{
 		for (let i = 0; i < lifePUs.length; i++)
 		{
@@ -800,7 +819,7 @@ function stageNumber()
 }
 
 
-//creates camera boarder/dashboard
+//creates camera boarder(dashboard)
 function Dashboard()
 {
 	push();
@@ -1046,11 +1065,7 @@ function setPointer()
 			minIdx = i;
  	 	}
 		pointer.rotation = enemies[minIdx].angleTo(player1) - 90;
-	//angle = enemies[minIdx].angleTo(player1) - 90;
-	//pointer.rotateTo(angle,3)
 	}
-	//console.log(angle);
-	//pointer.rotateTowards(enemies[minIdx],0.1,0)
 }
 
 function TractorBeamSetup()

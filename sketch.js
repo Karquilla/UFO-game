@@ -52,7 +52,7 @@ let rapidfiring = false;
 let PwrUps;
 let plyrShotTmr = 0
 let plyrShotTmrstrt = -30;
-let gameState = "title"; // title, start, run, next stage, game over.
+let gameState = "title";    // title, start, run, next stage, game over.
 let tripNextStage = false;
 let beginTimer = 0;
 let stageCooldown = 0;
@@ -111,6 +111,7 @@ function draw() {
 	if (gameState == "run")
 	{
 		background(32,34,50);
+		playerMove();
 		FlyingLimit();
 		TractorBeam();
 		LifePickup();
@@ -118,6 +119,7 @@ function draw() {
 		rapidFire();
 		enemyRest();
 		shootEnemylaser();
+		shootlaser();
 		setPointer();
 		PwrUpsRest();
 		nextStageSwitch();
@@ -136,15 +138,16 @@ function draw() {
 		//MiniMap()
 		//oneUpText();
 		//console.log(player1.x)
-		//console.log(player1.x,player1.y);
+		console.log(player1.x,player1.y);
 	}
 
 	if(gameState == 'nextStage')
 	{
 		background(32,34,50);
-		animation(BckgrndAni,width/2,height/2);
+		animation(BckgrndAni,0,-1000)
+		animation(BckgrndAni,0,1000)
 		DrawThingsOnCam();
-		nextStageButton();
+		nextStageSetup();
 		resetSwitch();
 		lives.draw();
 		Bshield.draw();
@@ -153,8 +156,7 @@ function draw() {
 		pointer.draw();
 		HUD.draw();
 		enemiesLeft();
-		player1.speed = 0;
-		Bttn_nextStage.draw();
+		//player1.speed = 0;
 		buttons.draw();
 	}
 
@@ -162,6 +164,8 @@ function draw() {
 	{
 		//GameOver();
 		gameOverScreen();
+		resetSwitch();
+		buttons.draw();
 		Dashboard();
 	}
 }
@@ -174,8 +178,8 @@ function preload()
 	battery = loadImage('assets/drop items battery.png');
 	greenItem = loadImage('assets/drop items green.png');
 	DSxplAni = loadAnimation('assets/splode v3.png', { frameSize: [540, 420], frames: 10, frameDelay: 5})
-	BckgrndAni = loadAnimation('assets/Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 10});
-	BckgrndAni.scale = 1.5;
+	BckgrndAni = loadAnimation('assets/Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 20});
+	BckgrndAni.scale = 3;
 
 	stageClearSprite = new Sprite(750,250);
 	stageClearSprite.spriteSheet = 'assets/stage clear ani 2.png';
@@ -235,10 +239,10 @@ function preload()
 function DrawThingsOnCam()
 {
 	camera.on();
-	Camera1();
+	CameraMove();
 	push();
-	scale(2.5);
-	animation(BckgrndAni,width/2,height/2)
+	animation(BckgrndAni,0,-1000)
+	animation(BckgrndAni,0,1000)
 	pop();
 	//playerShake();
 	enlasers.draw();
@@ -246,8 +250,7 @@ function DrawThingsOnCam()
 	lasers.draw();
 	enemyHit();
 	laserRemove();
-	playerMove();
-	shootlaser();
+
 	DSexplns.draw();
 	Eexplns.draw();
 	PwrUps.draw();
@@ -335,11 +338,11 @@ function createEnemies()
 	{
 		for (let i = 0; i < enDSStartamt; i++)
 		{
-			enemyDS = new enemiesDS.Sprite(Math.floor(random(0,250)) * 10,Math.floor(random(0,250)) * 10);
+			enemyDS = new enemiesDS.Sprite(Math.floor(random(-300,300)) * 10,Math.floor(random(-300,300)) * 10);
 		}
 		for (let i = 0; i < enEStartamt; i++)
 		{
-			enemyE = new enemiesE.Sprite(Math.floor(random(0,250)) * 10,Math.floor(random(0,250)) * 10);
+			enemyE = new enemiesE.Sprite(Math.floor(random(-300,300)) * 10,Math.floor(random(-300,300)) * 10);
 		}
 	}
 	for (let i = 0; i < enemies.length; i++)
@@ -525,7 +528,7 @@ function shootlaser()
 }
 
 //Keeps camera centered on UFO
-function Camera1()
+function CameraMove()
 {
 	while (player1.x > camera.x + 600)
 	{
@@ -564,8 +567,11 @@ function border()
 // limits how far player can go. makes player bounce back when limit is reached.
 function FlyingLimit()
 {
-	let PtoCdist = dist(wrldCenter.x,wrldCenter.y,player1.x,player1.y);
-	if (abs(PtoCdist) > 3000)
+	if (player1.x > 3000 || player1.x < -3000)
+	{
+		player1.moveTo(wrldCenter.x,wrldCenter.y,3);
+	}
+	if (player1.y > 3000 || player1.y < -3000)
 	{
 		player1.moveTo(wrldCenter.x,wrldCenter.y,3);
 	}
@@ -619,7 +625,8 @@ function shootEnemylaser()
 function gameOverScreen()
 {	
 	background(32,34,50);
-	animation(BckgrndAni,width/2,height/2);
+	animation(BckgrndAni,0,-1000)
+	animation(BckgrndAni,0,1000)
 	Bshield.draw();
 	gameOverSprite.draw();
 
@@ -997,25 +1004,22 @@ function resetSwitch()
 }
 
 
-function nextStageButton()
+function nextStageSetup()
 {
 
 	if (tripNextStage == false)
-	{
-		Bttn_nextStage = new buttons.Sprite(width/2, height/2 + 100, 100, 75);
-		//Bttn_nextStage.color = color('red');
-		Bttn_nextStage.textSize = 20;
-		Bttn_nextStage.textColor = color('white');
-		Bttn_nextStage.text = 'CONTINUE';
-		Bttn_nextStage.collider = 'k';
-		Bttn_nextStage.color = color('goldenrod');
+	{	
+		enlasers.remove();
+		lasers.remove();
 		Bshield.ani = ['down', 'idledown'];
+		setTimeout(nextStageButton,3600)
 		setTimeout(function() {stageClearSprite.ani = ['play','end'];},1500)
-		setTimeout(enemyIncrease,3000);
+		setTimeout(function() {player1.moveTo(0,0,75);},1700)
+		setTimeout(enemyIncrease,3500);
 		//Bttn_nextStage.textColor = color('white');
 		tripNextStage = true;
 	}
-	if(frameCount - stageCooldown > 210)
+	if(frameCount - stageCooldown > 217)
 	{
 		if (Bttn_nextStage.mouse.presses())
 		{
@@ -1027,6 +1031,21 @@ function nextStageButton()
 			gameState = 'run';
 		}
 	}
+}
+
+function nextStageButton()
+{
+	camera.on()
+	camera.x = 0
+	camera.y = 0
+	camera.off()
+	Bttn_nextStage = new buttons.Sprite(width/2, height/2 + 100, 100, 75);
+	//Bttn_nextStage.color = color('red');
+	Bttn_nextStage.textSize = 20;
+	Bttn_nextStage.textColor = color('white');
+	Bttn_nextStage.text = 'CONTINUE';
+	Bttn_nextStage.collider = 'k';
+	Bttn_nextStage.color = color('goldenrod');
 }
 
 function enemyIncrease()
@@ -1152,12 +1171,9 @@ function MiniMap()
 
 
 /*  ISSUES
-1. enemy rotation.
 2. i believe enemy explosions animation doesnt finish if killing enemies in quick succesion
 fixed 
-3. enemies may get pushed out of bounds if spawned near player and moved
 4. balancing
-5. background need resized
 
 
 		WIP

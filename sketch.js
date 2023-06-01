@@ -1,14 +1,14 @@
 /*	
 Copyright (c) 2023 Kyle Arquilla. Information in LICENSE.txt file
 
-	UFO Blaster 
+	Cosmic Chaos 
 	Created by: Kyle Arquilla
 	Artwork by: Melissa Douglas
 */
 
 const MAX_LIVES = 5;
-const enDSIncAmt = 10;         // default 10
-const enEIncAmt = 5;          // default 5
+const enDSIncAmt = 10;      // default 10
+const enEIncAmt = 5;        // default 5
 let enDSStartamt = 10;    	//enemy start amount
 let enEStartamt = 5;    	//enemy eye start amount
 let alpha1 = 0;         	//sets alpha for next stage
@@ -56,6 +56,7 @@ let gameState = "title";    // title, start, run, next stage, game over.
 let tripNextStage = false;
 let beginTimer = 0;
 let stageCooldown = 0;
+let TbeamCooldown = 0;
 let stage = 1;
 
 
@@ -71,6 +72,7 @@ function setup() {
 	resetConfirm = new Sprite(0,0,0);
 	resetDeny = new Sprite(0,0,0);
 	instructionsSetup()
+	spriteAniSetup()
 
 	//miniMap = createImage(222, 75);
 }
@@ -83,12 +85,13 @@ function draw() {
 		Dashboard();
 		HUD.draw();
 		instructions();
+		title()
 	}
 
 	if (gameState == "start")
 	{
 		Bshield.ani = ['up', 'idleup', ';;']
-		camera.zoom = 0.5;  //default 0.75
+		camera.zoom = 0.5;  //default 0.75 
 		player();
 		camera.x = player1.x;
 		camera.y = player1.y;
@@ -138,14 +141,12 @@ function draw() {
 		//MiniMap()
 		//oneUpText();
 		//console.log(player1.x)
-		console.log(player1.x,player1.y);
+		//console.log(player1.x,player1.y);
 	}
 
 	if(gameState == 'nextStage')
 	{
 		background(32,34,50);
-		animation(BckgrndAni,0,-1000)
-		animation(BckgrndAni,0,1000)
 		DrawThingsOnCam();
 		nextStageSetup();
 		resetSwitch();
@@ -177,21 +178,33 @@ function preload()
 	pointerImg = loadImage('assets/arrow pointer.png');
 	battery = loadImage('assets/drop items battery.png');
 	greenItem = loadImage('assets/drop items green.png');
-	DSxplAni = loadAnimation('assets/splode v3.png', { frameSize: [540, 420], frames: 10, frameDelay: 5})
+	DSxplAni = loadAnimation('assets/splode v3.png', { frameSize: [540, 420], frames: 10, frameDelay: 5});
 	BckgrndAni = loadAnimation('assets/Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 20});
-	BckgrndAni.scale = 3;
+	titleAni =  loadAnimation('assets/TITLE.png',{frameSize: [1500, 1128], frames: 4, frameDelay: 20});
+	stageClearAni = loadImage('assets/stage clear ani 2.png');
+	gameOverAni = loadImage("assets/gameOver.png");
+	EexplnsAni = loadImage('assets/eye splode v2.png');
+	enlasersAni = loadImage('assets/blaster.png');
+	lasersAni = loadImage('assets/ufo zaps.png');
+	TbeamAni = loadImage('assets/Beam Sheet.png');
+	BshieldAni = loadImage('assets/Blast shield.png');
+	continueButtonImg = loadImage('assets/continue button.png');
+	startButtonImg = loadImage('assets/start button.png');
+	playerSpriteAnim = loadAnimation("assets/UFO V2.png","assets/UFO V2 STEALTH.png");
+}
 
+function spriteAniSetup()
+{
 	stageClearSprite = new Sprite(750,250);
-	stageClearSprite.spriteSheet = 'assets/stage clear ani 2.png';
+	stageClearSprite.spriteSheet = stageClearAni;
 	stageClearSprite.addAnis({play: { width:1592, height: 800, row: 0, frames: 10, frameDelay: 9},
 							   end: { width:1592, height: 800, row: 1, frames: 1, frameDelay: 1},
 							 clear: { width:1592, height: 800, row: 0, frames: 1, frameDelay: 1}});
 	stageClearSprite.ani = 'clear';
 	stageClearSprite.collider = 'n';
-	//stageClearSprite.scale = 1.75;
 
 	gameOverSprite = new Sprite(745,400);
-	gameOverSprite.spriteSheet = "assets/gameOver.png"
+	gameOverSprite.spriteSheet = gameOverAni;
 	gameOverSprite.addAnis({play: { width:1196, height: 600, row: 0, frames: 8, frameDelay: 7},
 							 end: { width:1196, height: 600, row: 1, frames: 1, frameDelay: 1},
 	  					   clear: { width:1196, height: 600, row: 0, frames: 1, frameDelay: 1}});
@@ -199,40 +212,43 @@ function preload()
 	gameOverSprite.collider = 'n';
 
 	Eexplns = new Group();
-	Eexplns.spriteSheet = 'assets/eye splode v2.png';
+	Eexplns.spriteSheet = EexplnsAni;
 	Eexplns.addAnis({explode: { width:600, height: 400, row: 0, frames: 8, frameDelay: 5},
 						 hit: { width:600, height: 400, row: 1, frames: 3, frameDelay: 15}});
 
 	enlasers = new Group();
-	enlasers.spriteSheet = 'assets/blaster.png';
+	enlasers.spriteSheet = enlasersAni;
 	enlasers.addAnis({shoot: { width : 50, height: 25, row: 0, frames: 11, frameDelay: 4 },
 						fly: { width : 50, height: 25, row: 1, frames: 3 , frameDelay: 4 }});
 
 	lasers = new Group();
-	lasers.spriteSheet = 'assets/ufo zaps.png';
+	lasers.spriteSheet = lasersAni;
 	lasers.addAnis({shoot: { width : 100, height: 50, row: 0, frames: 16, frameDelay: 4 },
 					  fly: { width : 100, height: 50, row: 1, frames: 3 , frameDelay: 4 }});
-	
+
 	Tbeam = new Sprite();
-	Tbeam.spriteSheet = 'assets/Beam Sheet.png'
+	Tbeam.spriteSheet = TbeamAni;
 	Tbeam.addAnis({down: { width : 100, height: 100, row: 0, frames: 6, frameDelay: 10 },
-								 up: { width : 100, height: 100, row: 1, frames: 6 , frameDelay: 10 },
-								 idleup: {width : 100, height: 100, row: 0, frames: 1 },
-								 idledown: {width : 100, height: 100, row: 1, frames: 1 }});
-	Tbeam.ani = 'idleup'
+					 up: { width : 100, height: 100, row: 1, frames: 6 , frameDelay: 10 },
+				 idleup: {width : 100, height: 100, row: 0, frames: 1 },
+			   idledown: {width : 100, height: 100, row: 1, frames: 1 }});
+	Tbeam.ani = 'idleup';
 
 	Bshield = new Sprite(747,375);
-	Bshield.spriteSheet = 'assets/Blast shield.png';
+	Bshield.spriteSheet = BshieldAni;
 	Bshield.addAnis({down: { width : 750, height: 375, row: 1, frames: 22, frameDelay: 6 },
-					up: { width : 750, height: 375, row: 0, frames: 23, frameDelay: 6 },
-					idleup: {width : 750, height: 375, row: 1, frames: 1 },
-					idledown: {width : 750, height: 375, row: 0, frames: 1 }});
-	Bshield.ani = 'idledown'
+					   up: { width : 750, height: 375, row: 0, frames: 23, frameDelay: 6 },
+				   idleup: {width : 750, height: 375, row: 1, frames: 1 },
+				 idledown: {width : 750, height: 375, row: 0, frames: 1 }});
+	Bshield.ani = 'idledown';
 	Bshield.scale = 1.96;
 	Bshield.collider = 'n';
 
-	playerSpriteAnim = loadAnimation("assets/UFO V2.png","assets/UFO V2 STEALTH.png");
+	BckgrndAni.scale = 3;
+
 	playerSpriteAnim.frameDelay = 10;
+
+
 }
 
 // collecting the sprites and objects so the can be drawn on camera and are effected by the zoom.
@@ -241,8 +257,8 @@ function DrawThingsOnCam()
 	camera.on();
 	CameraMove();
 	push();
-	animation(BckgrndAni,0,-1000)
-	animation(BckgrndAni,0,1000)
+	animation(BckgrndAni,0,-1000);
+	animation(BckgrndAni,0,1000);
 	pop();
 	//playerShake();
 	enlasers.draw();
@@ -345,9 +361,6 @@ function createEnemies()
 			enemyE = new enemiesE.Sprite(Math.floor(random(-300,300)) * 10,Math.floor(random(-300,300)) * 10);
 		}
 	}
-	for (let i = 0; i < enemies.length; i++)
-	{
-		//console.log(enemies[i].x);
 	for ( let i = 0; i < enemies.length; i++)
 	{
 		let PtoEdist = dist(enemies[i].x,enemies[i].y,player1.x,player1.y);
@@ -358,13 +371,7 @@ function createEnemies()
 			enemies[i].x = random(arr);
 			enemies[i].y = random(arr);
 		}
-			//console.log(PtoEdist);
-	}
-
-		//else if (enemies[i].x < width/2 + 200 && enemies[i].x > 0 && enemies[i].y < height/2 + 200 && enemies[i].y > height/2 - 200)
-		//{
-		//	enemies[i].x += 200
-		//}
+		//console.log(PtoEdist);
 	}
 }
 
@@ -377,13 +384,10 @@ function enemyRest()
 			if (enemies[i].speed != 0)
 			{
 				enemies[i].speed *= 0.98;
-				//
 			}
 			if(enemies[i].rotation != 0)
 			{
-				//setTimeout(function() {if (enemies.length != 0) {enemies[i].rotateTo(0,1.5);}}, 1000);
-			enemies[i].rotateTo(0,5);
-			//console.log(enemies[i].rotaion)
+			enemies[i].rotateTowards(0,0.1);
 			}
 		}
 	}
@@ -432,6 +436,7 @@ DSexpln = new DSexplns.Sprite(x,y);
 DSexpln.rotation = rot;
 setTimeout(function() {DSexplns[DSexplns.length-1].remove();},400)
 }
+
 /////////////
 
 function EexplnsSprite(x,y,rot)
@@ -491,13 +496,10 @@ function laserRemove()
 // Setting up group of laser sprites
 function laserSetup()
 {
-
 	lasers.width = 10;
 	lasers.speed = 1;
 	lasers.height = 15;
-	lasers.life = 300;
-
-
+	lasers.life = 280;
 }
 
 // makes new laser on mouse and sets properties.
@@ -548,10 +550,6 @@ function CameraMove()
 	}
 }
 
-function Animation()
-{
-
-}
 
 //not used. old boarder
 function border()
@@ -579,9 +577,7 @@ function FlyingLimit()
 //sets up enemy laser sprite.
 function enemylaser()
 {
-	enlasers.width = 12;
-	enlasers.height = 5;
-	enlasers.speed = 4;
+	enlasers.speed = 5;
 	enlasers.life = 300;
 	enlasers.layer = 1;
 	enlasers.scale = 2
@@ -598,21 +594,22 @@ function enemylaser()
 
 //makes enmies shoot when player come with in a distance. shoot timer gaps the shots.
 function shootEnemylaser()
-{//shoots once every second
+{
+
 	if (frameCount - beginTimer > 360)
 	{
-		if (frameCount % 60 == 0 )
-		{//for all enemies if distance of enemyi is less then 400px to player then enemyi shoot
+		//shoot timer
+		if (frameCount % (60 - stage) == 0 )
+		{
+			//for all enemies if distance of enemyi is less then 400px to player then enemyi shoot
 			for ( var i = 0; i < enemies.length; i++)
 			{
 			let PtoEdist = dist(enemies[i].x,enemies[i].y,player1.x,player1.y);
 			let x = abs(PtoEdist);
-			if (x < 600)
+			if (x < 715)
 				{
-				enlaser = new enlasers.Sprite();
+				enlaser = new enlasers.Sprite(enemies[i].x,enemies[i].y,12,5);
 				enlaser.ani = ['shoot','fly']
-				enlaser.x = enemies[i].x;
-				enlaser.y = enemies[i].y;
 				enlaser.rotation = enemies[i].angleTo(player1);
 				enlaser.direction = enlaser.angleTo(player1);
 				}
@@ -903,18 +900,26 @@ function instructions()
 	fill(color('darkgreen'));
 	textAlign(CENTER, TOP);
 	textSize(20);
-	text("HOW TO PLAY",instX,instY + 10, 200, 300);
+	text("HOW TO PLAY",instX,instY + 10, 200, 50);
 	line(instX, instY + 35, instX + 200, instY + 35)
 	textSize(15);
 	textAlign(LEFT, TOP);
-	text("LMB = FIRE",instX + 20,instY + 45, 200, 300);
-	text("WASD = MOVE",instX + 20,instY + 65, 200, 300);
-	text("SPACE = TRACTOR BEAM",instX + 20,instY + 85, 200, 300);
+	text("LMB = FIRE",instX + 20,instY + 45, 200);
+	text("WASD = MOVE",instX + 20,instY + 65, 200);
+	text("SPACE = TRACTOR BEAM",instX + 20,instY + 85, 200);
 	line(instX, instY + 110, instX + 200, instY + 110);
 	textAlign(CENTER, TOP);
 	text("Destroy all of the enemy space ships to move on.", instX + 5, instY + 120, textW-3, 300);
 	text("Use the tractor beam to collect power ups", instX+5, instY + 165, textW - 3, 300);
 	text("Lives are displayed at the bottom of the window - If you lose all your lives it's game over.", instX, instY + 210, textW, 300);
+	pop();
+}
+
+function title()
+{
+	push()
+	scale(0.60);
+	animation(titleAni,width/2 + 510,height/2 + 85);
 	pop();
 }
 
@@ -942,12 +947,10 @@ function createButtons()
 {
 	buttons = new Group();
 	buttons.collider = 'k';
-	Bttn_start = new buttons.Sprite(width/2,height/2 + 100,100,50);
-	Bttn_start.color = color('blue')
-	Bttn_start.text = 'START';
-	Bttn_start.textColor = color('lightblue')
-	Bttn_start.textSize = 30;
+	Bttn_start = new buttons.Sprite(width/2 + 10,height/2 + 130,100,50);
+	Bttn_start.img = startButtonImg
 	Bttn_start.collider = 'k';
+	Bttn_start.scale = 2;
 	//Bttn_start.img = 'assets/empty.png';
 	
 }
@@ -1040,12 +1043,10 @@ function nextStageButton()
 	camera.y = 0
 	camera.off()
 	Bttn_nextStage = new buttons.Sprite(width/2, height/2 + 100, 100, 75);
-	//Bttn_nextStage.color = color('red');
-	Bttn_nextStage.textSize = 20;
-	Bttn_nextStage.textColor = color('white');
-	Bttn_nextStage.text = 'CONTINUE';
+	Bttn_nextStage.img = continueButtonImg;
+	Bttn_nextStage.scale = 2
 	Bttn_nextStage.collider = 'k';
-	Bttn_nextStage.color = color('goldenrod');
+
 }
 
 function enemyIncrease()
@@ -1123,15 +1124,18 @@ function TractorBeam()
 			}
 		}
 	}
-	if (kb.presses('space'))
-		{
-			Tbeam.ani = ['down','idledown']
-		}
-		else if (kb.released('space'))
+	if (frameCount - TbeamCooldown > 70)
 	{
-	setTimeout(function() {Tbeam.ani = ['up','idleup'];},500);
+		if (kb.presses('space'))
+			{
+				Tbeam.ani = ['down','idledown']
+			}
+			else if (kb.released('space'))
+			{
+				Tbeam.ani = ['up','idleup'];
+				TbeamCooldown = frameCount;
+			}
 	}
-
 }
 				
 
@@ -1203,6 +1207,7 @@ fixed
 	- fixed the arrow. now points correctly.
 	- fixed player not slowing to a stop.
 	- enemies no longer spawn within shooting distance of player.
+
 */
 
 

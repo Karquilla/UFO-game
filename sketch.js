@@ -9,8 +9,8 @@ Copyright (c) 2023 Kyle Arquilla. Information in LICENSE.txt file
 const MAX_LIVES = 5;
 const enBrnIncAmt = 8;      // default 10
 const enEIncAmt = 2;        // default 5
-let enBrnStartamt = 8;    	// brain enemy start amount
-let enEStartamt = 2;    	// eye enemy start amount
+let enBrnStartamt = 1;    	// brain enemy start amount
+let enEStartamt = 50;    	// eye enemy start amount
 let alpha1 = 0;         	// sets alpha for next stage
 let player1; 				// player sprite
 let life;     				// lives sprite
@@ -137,7 +137,7 @@ function draw() {
 		pointer.draw();
 		playerHit();
 		setGameOver();
-		pause()
+		pauseScreen()
 	}
 
 	if(gameState == 'nextStage')
@@ -162,6 +162,7 @@ function draw() {
 		resetSwitch();
 		buttons.draw();
 		Dashboard();
+		HUD.draw();
 	}
 }
 
@@ -209,8 +210,9 @@ function spriteAniSetup()
 
 	Eexplns = new Group();
 	Eexplns.spriteSheet = EexplnsAni;
-	Eexplns.addAnis({explode: { width:600, height: 400, row: 0, frames: 8, frameDelay: 5},
-						 hit: { width:600, height: 400, row: 1, frames: 3, frameDelay: 15}});
+	Eexplns.addAnis({explode: { width:600, height: 400, col: 1, row: 0, frames: 8, frameDelay: 5},
+						 hit: { width:600, height: 400, row: 1, frames: 3, frameDelay: 15},
+						 empty: { width:600, height: 400, row: 0, frames: 1, frameDelay: 15}});
 
 	enlasers = new Group();
 	enlasers.spriteSheet = enlasersAni;
@@ -429,7 +431,7 @@ function BrnexplnsSprite(x,y,rot)
 {
 Brnexpln = new Brnexplns.Sprite(x,y);
 Brnexpln.rotation = rot;
-setTimeout(function() {Brnexplns[Brnexplns.length-1].remove();},400)
+setTimeout(function() {Brnexplns[0].remove();},400)
 }
 
 /////////////
@@ -437,9 +439,9 @@ setTimeout(function() {Brnexplns[Brnexplns.length-1].remove();},400)
 function EexplnsSprite(x,y,rot)
 {
 Eexpln = new Eexplns.Sprite(x,y);
-Eexpln.ani = ['hit','explode',';;']
+Eexpln.ani = ['hit','explode','empty']
 Eexpln.rotation = rot;
-setTimeout(function() {Eexplns[Eexplns.length-1].remove();},1300)
+setTimeout(function() {Eexplns[0].remove();},1300)
 }
 
 //removes life when player is hit.
@@ -664,6 +666,7 @@ function setGameOver()
 		enlasers.remove();
 		lasers.remove();
 		PwrUps.remove();
+		pointer.remove();
 	}
 }
 
@@ -945,7 +948,7 @@ function createButtons()
 	Bttn_start = new buttons.Sprite(width/2 + 10,height/2 + 130,100,50);
 	Bttn_start.img = startButtonImg
 	Bttn_start.collider = 'k';
-	Bttn_start.scale = 2;
+	Bttn_start.scale = 0.5;
 	//Bttn_start.img = 'assets/empty.png';
 	
 }
@@ -1039,7 +1042,7 @@ function nextStageButton()
 	camera.off()
 	Bttn_nextStage = new buttons.Sprite(width/2, height/2 + 100, 100, 75);
 	Bttn_nextStage.img = continueButtonImg;
-	Bttn_nextStage.scale = 2
+	Bttn_nextStage.scale = 0.5;
 	Bttn_nextStage.collider = 'k';
 
 }
@@ -1138,33 +1141,39 @@ function TractorBeam()
 	}
 }
 
-function pause()
+function pauseScreen()
 {
 	if (gamePaused)
 	{
 		push();
+		stroke('black')
 		textSize(30)
-		fill(color('darkred'))
+		fill('darkred')
 		textAlign(CENTER,CENTER)
 		text('paused',width/2,height/2 - 50)
 		pop();
 	}
 }
 
+// pause function
 function keyPressed() 
 {
-	if (keyCode === ESCAPE) {
-	  gamePaused = !gamePaused;
-  
-	  if (gamePaused) {
-		
-		noLoop();
-	  } else {
-		// Resume the game
-		loop();
-	  }
+	if (gameState == 'run')
+	{
+		if (keyCode === ESCAPE) 
+		{
+			gamePaused = !gamePaused;
+			if (gamePaused) 
+			{
+				noLoop();
+			} 
+			else 
+			{
+				loop();
+			}
+		}
 	}
-  }
+}
 		
 
 

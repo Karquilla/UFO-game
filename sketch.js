@@ -9,8 +9,8 @@ Copyright (c) 2023 Kyle Arquilla. Information in LICENSE.txt file
 const MAX_LIVES = 5;
 const enBrnIncAmt = 8;      // default 10
 const enEIncAmt = 2;        // default 5
-let enBrnStartamt = 1;    	// brain enemy start amount
-let enEStartamt = 50;    	// eye enemy start amount
+let enBrnStartamt = 8;    	// brain enemy start amount
+let enEStartamt = 2;    	// eye enemy start amount
 let alpha1 = 0;         	// sets alpha for next stage
 let player1; 				// player sprite
 let life;     				// lives sprite

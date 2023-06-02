@@ -7,48 +7,48 @@ Copyright (c) 2023 Kyle Arquilla. Information in LICENSE.txt file
 */
 
 const MAX_LIVES = 5;
-const enDSIncAmt = 10;      // default 10
-const enEIncAmt = 5;        // default 5
-let enDSStartamt = 10;    	//enemy start amount
-let enEStartamt = 5;    	//enemy eye start amount
-let alpha1 = 0;         	//sets alpha for next stage
-let BckgrndAni;
-let player1; 				//player sprite
-let life;     				//lives sprite
-let lives;    				//lives group
-let laser;					//laser sprite
+const enBrnIncAmt = 8;      // default 10
+const enEIncAmt = 2;        // default 5
+let enBrnStartamt = 8;    	// brain enemy start amount
+let enEStartamt = 2;    	// eye enemy start amount
+let alpha1 = 0;         	// sets alpha for next stage
+let player1; 				// player sprite
+let life;     				// lives sprite
+let lives;    				// lives group
+let laser;					// laser sprite
 let laserStartAnim;
 let laserFlyAnim;
-let enlaser;   				//enemy lasers sprite
-let DSexpln;
-let DSexplns;				//animation for explosion testing
-let DSxplAni;
+let enlaser;   				// enemy lasers sprite
+let Brnexpln;
+let Brnexplns;				// animation for explosion testing
+let BrnxplAni;
 let Eexpln;
-let Eexplns;				//animation for explosion testing
-let enemies;  				//enemies group
-let enemiesDS;
+let Eexplns;				// animation for explosion testing
+let enemies;  				// enemies group
+let enemiesBrn;
 let enemiesE;        
-let enemyDS;           		//enemies sub group
-let enemyE              	//enemies sub group
+let enemyBrn;           		// enemies sub group
+let enemyE              	// enemies sub group
 let buttons;
 let Bttn_reset;
 let gameOver = false;   	// boolean to check if game over
 let trip = false;       
-let score = 0;          	//total amount of enemies killed
-let nextstage = false;  	//turns true when next stage starts false again when next stage is doen setting up.
-let paused = false;     	//not used
-let HUD;                	//hud sprite
-let dashboard;          	//dashboard sprite
-let pointer;            	//pointer sprite
-let enemyToplayerDist = []; //keeps an array of all the enemies distances to the player
-let miniMap;            	//for testing not currently used
-let borders;            	//old boarder sprites
-let wrldCenter;         	//center of the boundry     
+let score = 0;          	// total amount of enemies killed
+let nextstage = false;  	// turns true when next stage starts false again when next stage is doen setting up.
+let paused = false;     	// not used
+let HUD;                	// hud sprite
+let dashboard;          	// dashboard sprite
+let pointer;            	// pointer sprite
+let enemyToplayerDist = []; // keeps an array of all the enemies distances to the player
+let miniMap;            	// for testing not currently used
+let borders;            	// old boarder sprites
+let wrldCenter;         	// center of the boundry     
 let lifePU;
 let lifePUs = [];
 let rapidfirePU;
 let rapidfirePUs = [];
 let rapidfiring = false;
+let TbeamDown = false;
 let PwrUps;
 let plyrShotTmr = 0
 let plyrShotTmrstrt = -30;
@@ -58,6 +58,7 @@ let beginTimer = 0;
 let stageCooldown = 0;
 let TbeamCooldown = 0;
 let stage = 1;
+let gamePaused = false;
 
 
 function setup() {
@@ -106,8 +107,6 @@ function draw() {
 		Pointer();
 		Lives();
 		resetButton();
-		//allSprites.debug = true;
-
 		gameState = 'run'
 	}
 
@@ -138,10 +137,7 @@ function draw() {
 		pointer.draw();
 		playerHit();
 		setGameOver();
-		//MiniMap()
-		//oneUpText();
-		//console.log(player1.x)
-		//console.log(player1.x,player1.y);
+		pause()
 	}
 
 	if(gameState == 'nextStage')
@@ -157,13 +153,11 @@ function draw() {
 		pointer.draw();
 		HUD.draw();
 		enemiesLeft();
-		//player1.speed = 0;
 		buttons.draw();
 	}
 
 	if(gameState == 'gameOver')
 	{
-		//GameOver();
 		gameOverScreen();
 		resetSwitch();
 		buttons.draw();
@@ -174,13 +168,15 @@ function draw() {
 // images/anims to preload
 function preload()
 {
+	playerSpriteAnim = loadAnimation("assets/UFO V2.png","assets/UFO V2 STEALTH.png");
+	BrnxplAni = loadAnimation('assets/splode v3.png', { frameSize: [540, 420], frames: 10, frameDelay: 5});
+	BckgrndAni = loadAnimation('assets/Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 20});
+	titleAni =  loadAnimation('assets/TITLE.png',{frameSize: [1500, 1128], frames: 4, frameDelay: 20});
+
 	dashboard = loadImage('assets/SPACESHIP WINDOW & CONTROLS XL.png');
 	pointerImg = loadImage('assets/arrow pointer.png');
 	battery = loadImage('assets/drop items battery.png');
 	greenItem = loadImage('assets/drop items green.png');
-	DSxplAni = loadAnimation('assets/splode v3.png', { frameSize: [540, 420], frames: 10, frameDelay: 5});
-	BckgrndAni = loadAnimation('assets/Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 20});
-	titleAni =  loadAnimation('assets/TITLE.png',{frameSize: [1500, 1128], frames: 4, frameDelay: 20});
 	stageClearAni = loadImage('assets/stage clear ani 2.png');
 	gameOverAni = loadImage("assets/gameOver.png");
 	EexplnsAni = loadImage('assets/eye splode v2.png');
@@ -190,7 +186,7 @@ function preload()
 	BshieldAni = loadImage('assets/Blast shield.png');
 	continueButtonImg = loadImage('assets/continue button.png');
 	startButtonImg = loadImage('assets/start button.png');
-	playerSpriteAnim = loadAnimation("assets/UFO V2.png","assets/UFO V2 STEALTH.png");
+
 }
 
 function spriteAniSetup()
@@ -266,8 +262,7 @@ function DrawThingsOnCam()
 	lasers.draw();
 	enemyHit();
 	laserRemove();
-
-	DSexplns.draw();
+	Brnexplns.draw();
 	Eexplns.draw();
 	PwrUps.draw();
 	Tbeam.draw();
@@ -337,10 +332,10 @@ function playerMove()
 function setupEnemies()
 {
 	enemies = new Group();
-	enemiesDS = new enemies.Group();
+	enemiesBrn = new enemies.Group();
 	enemiesE = new enemies.Group();
 	enemies.d = 75;
-	enemiesDS.img = 'assets/BrainStation.png';
+	enemiesBrn.img = 'assets/BrainStation.png';
 	enemiesE.img = 'assets/EYE.png';
 	//enemies.x = () => random(-100,100) * 10;
 	//enemies.y = () => random(-100,100) * 10;
@@ -352,9 +347,9 @@ function createEnemies()
 	var arr = [-1000,1000]
 	if (enemies.length === 0)
 	{
-		for (let i = 0; i < enDSStartamt; i++)
+		for (let i = 0; i < enBrnStartamt; i++)
 		{
-			enemyDS = new enemiesDS.Sprite(Math.floor(random(-300,300)) * 10,Math.floor(random(-300,300)) * 10);
+			enemyBrn = new enemiesBrn.Sprite(Math.floor(random(-300,300)) * 10,Math.floor(random(-300,300)) * 10);
 		}
 		for (let i = 0; i < enEStartamt; i++)
 		{
@@ -396,14 +391,14 @@ function enemyRest()
 function enemyHit()
 {
   
-	for (let i = 0; i < enemiesDS.length;i++)
+	for (let i = 0; i < enemiesBrn.length;i++)
 	{
-		if (enemiesDS[i].collides(lasers))
+		if (enemiesBrn[i].collides(lasers))
 		{
-			DSexplnsSprite(enemiesDS[i].x + 14,enemiesDS[i].y + 15,enemiesDS[i].rotation);
-			pwrUpDrop(enemiesDS[i].x,enemiesDS[i].y);
+			BrnexplnsSprite(enemiesBrn[i].x + 14,enemiesBrn[i].y + 15,enemiesBrn[i].rotation);
+			pwrUpDrop(enemiesBrn[i].x,enemiesBrn[i].y);
 			score += 1;
-			enemiesDS[i].remove();
+			enemiesBrn[i].remove();
 		}
 	}
 	for (let i = 0; i < enemiesE.length;i++)
@@ -421,20 +416,20 @@ function enemyHit()
 function explnsSpriteSetup()
 {
 
-	DSexplns = new Group();
-	DSexplns.ani = DSxplAni;
-	DSexplns.collider = 'n';
-	DSexplns.scale = 0.35;
+	Brnexplns = new Group();
+	Brnexplns.ani = BrnxplAni;
+	Brnexplns.collider = 'n';
+	Brnexplns.scale = 0.35;
 	Eexplns.collider = 'n';
 	Eexplns.scale = 0.20;
 
 }
 
-function DSexplnsSprite(x,y,rot)
+function BrnexplnsSprite(x,y,rot)
 {
-DSexpln = new DSexplns.Sprite(x,y);
-DSexpln.rotation = rot;
-setTimeout(function() {DSexplns[DSexplns.length-1].remove();},400)
+Brnexpln = new Brnexplns.Sprite(x,y);
+Brnexpln.rotation = rot;
+setTimeout(function() {Brnexplns[Brnexplns.length-1].remove();},400)
 }
 
 /////////////
@@ -903,10 +898,10 @@ function instructions()
 	text("HOW TO PLAY",instX,instY + 10, 200, 50);
 	line(instX, instY + 35, instX + 200, instY + 35)
 	textSize(15);
-	textAlign(LEFT, TOP);
-	text("LMB = FIRE",instX + 20,instY + 45, 200);
-	text("WASD = MOVE",instX + 20,instY + 65, 200);
-	text("SPACE = TRACTOR BEAM",instX + 20,instY + 85, 200);
+	textAlign(CENTER, TOP);
+	text("LMB = FIRE",instX,instY + 45, 200);
+	text("WASD = MOVE",instX,instY + 65, 200);
+	text("HOLD SPACE = TRACTOR BEAM",instX,instY + 85, 200);
 	line(instX, instY + 110, instX + 200, instY + 110);
 	textAlign(CENTER, TOP);
 	text("Destroy all of the enemy space ships to move on.", instX + 5, instY + 120, textW-3, 300);
@@ -1051,7 +1046,7 @@ function nextStageButton()
 
 function enemyIncrease()
 {
-	enDSStartamt += enDSIncAmt;
+	enBrnStartamt += enBrnIncAmt;
 	enEStartamt += enEIncAmt;
 	createEnemies();
 }
@@ -1124,20 +1119,53 @@ function TractorBeam()
 			}
 		}
 	}
-	if (frameCount - TbeamCooldown > 70)
+	if (frameCount - TbeamCooldown > 30)
 	{
-		if (kb.presses('space'))
-			{
-				Tbeam.ani = ['down','idledown']
-			}
-			else if (kb.released('space'))
-			{
-				Tbeam.ani = ['up','idleup'];
-				TbeamCooldown = frameCount;
-			}
+		if (kb.space == 15)
+		{
+			Tbeam.ani = ['down','idledown']
+			TbeamDown = true
+		}
+	}
+	if(TbeamDown == true)
+	{
+		if (kb.released('space'))
+		{
+			Tbeam.ani = ['up','idleup'];
+			TbeamDown = false;
+			TbeamCooldown = frameCount;
+		}		
 	}
 }
-				
+
+function pause()
+{
+	if (gamePaused)
+	{
+		push();
+		textSize(30)
+		fill(color('darkred'))
+		textAlign(CENTER,CENTER)
+		text('paused',width/2,height/2 - 50)
+		pop();
+	}
+}
+
+function keyPressed() 
+{
+	if (keyCode === ESCAPE) {
+	  gamePaused = !gamePaused;
+  
+	  if (gamePaused) {
+		
+		noLoop();
+	  } else {
+		// Resume the game
+		loop();
+	  }
+	}
+  }
+		
 
 
 
@@ -1148,7 +1176,7 @@ function TractorBeam()
 
 
 //was trying to make mini map instead of arrow pointer
-
+/*
 function MiniMap()
 {
 	miniMap.loadPixels();
@@ -1170,7 +1198,7 @@ function MiniMap()
 	image(miniMap, 1000, 500);
 	pop();
 }
-
+*/
 
 
 

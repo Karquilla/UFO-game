@@ -289,7 +289,7 @@ function player()
 function playerMove()
 {
 	//keeps player from moving until shield animation is finished
-	if (frameCount - beginTimer < 198)
+	if (frameCount - beginTimer < 100)
 	{
 		player1.speed = 0;
 	}
@@ -529,11 +529,11 @@ function shootlaser()
 //Keeps camera centered on UFO
 function CameraMove()
 {
-	while (player1.x > camera.x + 600)
+	while (player1.x > camera.x + 700)
 	{
 		camera.x += 1;
 	}
-	while (player1.x < camera.x - 600)
+	while (player1.x < camera.x - 700)
 	{
 		camera.x -= 1;
 	}
@@ -541,7 +541,7 @@ function CameraMove()
 	{
 		camera.y += 1;
 	}
-	while (player1.y < camera.y - 200)
+	while (player1.y < camera.y - 450)
 	{
 		camera.y -= 1;
 	}
@@ -1209,22 +1209,11 @@ function MiniMap()
 }
 */
 
-
-
-/*  ISSUES
-2. i believe enemy explosions animation doesnt finish if killing enemies in quick succesion
-fixed 
-4. balancing
-
-
-		WIP
-1. power ups. currently just add life.// added rapid fire
-2. adding asteroids
-3. add homing missles for eye balls
-
-
-
+/*
 	CHANGE LOG 
+	6/11/23
+	- increased range of movement before camera is moved
+	- decreased the time before the player can start moving
 	5/28/23
 	- added instructions
 	- added player hit animation

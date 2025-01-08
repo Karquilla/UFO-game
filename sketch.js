@@ -6,7 +6,7 @@ Copyright (c) 2023 Kyle Arquilla. Information in LICENSE.txt file
 	Artwork by: Melissa Douglas
 */
 
-const MAX_LIVES = 5;
+const MAX_LIVES = 1;
 const enBrnIncAmt = 8;      // default 10
 const enEIncAmt = 2;        // default 5
 let enBrnStartamt = 8;    	// brain enemy start amount
@@ -62,7 +62,9 @@ let gamePaused = false;
 
 
 function setup() {
+	
 	createCanvas(1500, 750);
+	
 	textFont('fantasy');
 	allSprites.pixelPerfect = true;
 	wrldCenter = createVector(width/2,height/2);
@@ -74,13 +76,13 @@ function setup() {
 	resetDeny = new Sprite(0,0,0);
 	instructionsSetup()
 	spriteAniSetup()
-
 	//miniMap = createImage(222, 75);
 }
 
 function draw() {
 	if (gameState == "title")
 	{
+		
 		startButton();
 		Bshield.draw();
 		Dashboard();
@@ -92,6 +94,8 @@ function draw() {
 	if (gameState == "start")
 	{
 		Bshield.ani = ['up', 'idleup', ';;']
+		Bshield.ani.scale = 4
+		
 		camera.zoom = 0.5;  //default 0.75 
 		player();
 		camera.x = player1.x;
@@ -107,12 +111,15 @@ function draw() {
 		Pointer();
 		Lives();
 		resetButton();
+		bgSetup();
 		gameState = 'run'
 	}
 
 	if (gameState == "run")
 	{
+		
 		background(32,34,50);
+		
 		playerMove();
 		FlyingLimit();
 		TractorBeam();
@@ -168,12 +175,12 @@ function draw() {
 
 // images/anims to preload
 function preload()
-{
+{	
 	playerSpriteAnim = loadAnimation("assets/UFO V2.png","assets/UFO V2 STEALTH.png");
 	BrnxplAni = loadAnimation('assets/splode v3.png', { frameSize: [540, 420], frames: 10, frameDelay: 5});
-	BckgrndAni = loadAnimation('assets/Night sky v2xx.png',{frameSize: [2400, 1200], frames: 8, frameDelay: 20});
 	titleAni =  loadAnimation('assets/TITLE.png',{frameSize: [1500, 1128], frames: 4, frameDelay: 20});
 
+	BGspriteAni = loadAnimation('assets/nightBGsheet.png', { frameSize: [800, 400], frames: 8, frameDelay: 30});
 	dashboard = loadImage('assets/SPACESHIP WINDOW & CONTROLS XL.png');
 	pointerImg = loadImage('assets/arrow pointer.png');
 	battery = loadImage('assets/drop items battery.png');
@@ -184,14 +191,16 @@ function preload()
 	enlasersAni = loadImage('assets/blaster.png');
 	lasersAni = loadImage('assets/ufo zaps.png');
 	TbeamAni = loadImage('assets/Beam Sheet.png');
-	BshieldAni = loadImage('assets/Blast shield.png');
+	BshieldAni = loadImage('assets/ufoHatch.png');
 	continueButtonImg = loadImage('assets/continue button.png');
 	startButtonImg = loadImage('assets/start button.png');
-
+	
 }
 
 function spriteAniSetup()
 {
+	
+
 	stageClearSprite = new Sprite(750,250);
 	stageClearSprite.spriteSheet = stageClearAni;
 	stageClearSprite.addAnis({play: { width:1592, height: 800, row: 0, frames: 10, frameDelay: 9},
@@ -234,18 +243,40 @@ function spriteAniSetup()
 
 	Bshield = new Sprite(747,375);
 	Bshield.spriteSheet = BshieldAni;
-	Bshield.addAnis({down: { width : 750, height: 375, row: 1, frames: 22, frameDelay: 6 },
-					   up: { width : 750, height: 375, row: 0, frames: 23, frameDelay: 6 },
-				   idleup: {width : 750, height: 375, row: 1, frames: 1 },
-				 idledown: {width : 750, height: 375, row: 0, frames: 1 }});
+	Bshield.addAnis({down: { width : 400, height: 200, row: 1, frames: 22, frameDelay: 6 },
+					   up: { width : 400, height: 200, row: 0, frames: 23, frameDelay: 6 },
+				   idleup: {width : 1, height: 1, row: 1, frames: 0 },
+				 idledown: {width : 400, height: 200, row: 0, frames: 1 }});
 	Bshield.ani = 'idledown';
-	Bshield.scale = 1.96;
+	Bshield.ani.scale = 4
 	Bshield.collider = 'n';
 
-	BckgrndAni.scale = 3;
+	
+	
+	
+	
+
+	
+	
+	
+	//BckgrndAni.scale = 5;
 
 	playerSpriteAnim.frameDelay = 10;
 
+
+}
+
+function bgSetup() {
+	bg = new Group()
+	for (let i = 0; i <= 2; i++) {
+		BGsprite = new bg.Sprite(0,2000);
+		BGsprite.collider = 'n';
+		BGsprite.img = BGspriteAni
+		BGsprite.ani.scale = 10
+	}
+	bg[1].y = 0
+	bg[2].y = -2000
+	bg.debug = true
 
 }
 
@@ -254,10 +285,12 @@ function DrawThingsOnCam()
 {
 	camera.on();
 	CameraMove();
-	push();
-	animation(BckgrndAni,0,-1000);
-	animation(BckgrndAni,0,1000);
-	pop();
+	//push();
+	bg.draw();
+	
+	//animation(BckgrndAni,0,-1000);
+	//animation(BckgrndAni,0,1000);
+	//pop();
 	//playerShake();
 	enlasers.draw();
 	enemies.draw();
@@ -269,7 +302,7 @@ function DrawThingsOnCam()
 	PwrUps.draw();
 	Tbeam.draw();
 	player1.draw();
-
+	print(player1.y)
 	camera.off();
 }
 
@@ -614,21 +647,34 @@ function shootEnemylaser()
 		}
 	}
 }
-
+let bgs = false
 //sets up game over img and shows total enemies killed before game over.
 function gameOverScreen()
 {	
-	background(32,34,50);
-	animation(BckgrndAni,0,-1000)
-	animation(BckgrndAni,0,1000)
-	Bshield.draw();
-	gameOverSprite.draw();
+		if (!bgs) {
+			bg[0].ani.scale = 5
+			bg[1].ani.scale = 5
+			bg[2].ani.scale = 5
+			bgs = true
+		}
+		
+		background(32,34,50);
+		bg.draw()
+		Bshield.draw();
+		gameOverSprite.draw();
+
+		// Fade in
+		if (alpha1 < 255){
+			alpha1 += 1.2
+		}
+
+		// rects and text for stage and score
+		gameOverDecoration()
 
 
-	if (alpha1 < 255)
-	{
-		alpha1 += 1.2
-	}
+}
+
+function gameOverDecoration() {
 	push();
 	textAlign(CENTER,CENTER);
 	textSize(32);
@@ -636,23 +682,22 @@ function gameOverScreen()
 	stroke('black')
 	text(score,gameOverSprite.x + 6,gameOverSprite.y + 40);
 	pop();
+
 	push();
 	textAlign(CENTER,CENTER);
-	if (stage > 10)
-	{
+
+	if (stage > 10) {
 		textSize(28);
-	}
-	else
-	{
+	} 
+	else {
 		textSize(35);
 	}
+
 	fill(112,22,22,alpha1);
 	stroke('black')
 	text(stage,gameOverSprite.x + 105,gameOverSprite.y - 242);
 	pop();
-
 }
-
 
 function setGameOver()
 {
@@ -660,6 +705,7 @@ function setGameOver()
 	{
 		gameState = 'gameOver'
 		Bshield.ani = ['down','idledown']
+		Bshield.ani.scale = 4
 		gameOverSprite.ani = ['play','end']
 		player1.remove();
 		enemies.remove();
@@ -945,10 +991,12 @@ function createButtons()
 {
 	buttons = new Group();
 	buttons.collider = 'k';
-	Bttn_start = new buttons.Sprite(width/2 + 10,height/2 + 130,100,50);
+	Bttn_start = new buttons.Sprite(width/2 ,height/2 + 130,275,125);
 	Bttn_start.img = startButtonImg
+	Bttn_start.offset.x = 5
 	Bttn_start.collider = 'k';
-	Bttn_start.scale = 0.5;
+	Bttn_start.scale = .5;
+	//Bttn_start.debug = true;
 	//Bttn_start.img = 'assets/empty.png';
 	
 }
@@ -1013,6 +1061,7 @@ function nextStageSetup()
 		enlasers.remove();
 		lasers.remove();
 		Bshield.ani = ['down', 'idledown'];
+		Bshield.ani.scale = 4
 		setTimeout(nextStageButton,3600)
 		setTimeout(function() {stageClearSprite.ani = ['play','end'];},1500)
 		setTimeout(function() {player1.moveTo(0,0,75);},1700)
@@ -1026,6 +1075,7 @@ function nextStageSetup()
 		{
 			beginTimer = frameCount;
 			Bshield.ani = ['up', 'idleup'];
+			Bshield.ani.scale = 4
 			stageClearSprite.ani = 'clear';
 			tripNextStage = false;
 			Bttn_nextStage.remove();
@@ -1211,6 +1261,10 @@ function MiniMap()
 
 /*
 	CHANGE LOG 
+	[x] fix start button click area
+	[] performance fixes
+	[] make boarder smaller/playable area larger
+	[] fix for other browsers
 	6/11/23
 	- increased range of movement before camera is moved
 	- decreased the time before the player can start moving

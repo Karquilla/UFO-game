@@ -6,7 +6,7 @@ Copyright (c) 2023 Kyle Arquilla. Information in LICENSE.txt file
 	Artwork by: Melissa Douglas
 */
 
-const MAX_LIVES = 1;
+const MAX_LIVES = 5;
 const enBrnIncAmt = 8;      // default 10
 const enEIncAmt = 2;        // default 5
 let enBrnStartamt = 8;    	// brain enemy start amount
@@ -276,7 +276,7 @@ function bgSetup() {
 	}
 	bg[1].y = 0
 	bg[2].y = -2000
-	bg.debug = true
+	//bg.debug = true
 
 }
 
